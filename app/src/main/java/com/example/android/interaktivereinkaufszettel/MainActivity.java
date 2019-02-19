@@ -4,6 +4,9 @@ import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.media.AudioAttributes;
+import android.media.AudioManager;
+import android.media.SoundPool;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -29,6 +32,7 @@ import android.speech.RecognitionListener;
 import android.speech.RecognizerIntent;
 import android.speech.SpeechRecognizer;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.MenuInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -43,6 +47,10 @@ import java.util.List;
 import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity {
+    private AudioManager audio;
+    private SoundPool soundPool;
+    private int deleteSound, finishSound, turn_orangeSound, undoSound;
+
     static List<Note> notes = new ArrayList<>();
     //static List<Note> notesBackup = new ArrayList<>();
     public static final String DOC_REFERENCE = "EinkaufszettelCollection";
@@ -56,6 +64,22 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+
+        audio = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+        AudioAttributes audioAttributes = new AudioAttributes.Builder()
+                .setUsage(AudioAttributes.USAGE_ASSISTANCE_SONIFICATION)
+                .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                .build();
+
+        soundPool = new SoundPool.Builder()
+                .setMaxStreams(2)
+                .setAudioAttributes(audioAttributes)
+                .build();
+
+        deleteSound = soundPool.load(this, R.raw.delete, 1);
+        finishSound = soundPool.load(this, R.raw.finish, 1);
+        turn_orangeSound = soundPool.load(this, R.raw.turn_orange, 1);
+        undoSound = soundPool.load(this, R.raw.undo, 1);
 
         final RecyclerView recyclerView = findViewById(R.id.recycler_view);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
@@ -72,11 +96,13 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onSwiped(RecyclerView.ViewHolder viewHolder, int direction) {
                 final Note note = adapter.getNoteAt(viewHolder.getAdapterPosition());
+                soundPool.play(deleteSound, 1, 1, 0, 0, 1);
                 firebaseCollectionReference.document(adapter.getIdAt(viewHolder.getAdapterPosition())).delete();
                 Snackbar.make(recyclerView, "Einkaufseintrag gelöscht!", Snackbar.LENGTH_LONG)
                         .setAction("UNDO", new View.OnClickListener() {
                             @Override
                             public void onClick(View view) {
+                                soundPool.play(undoSound, 1, 1, 0, 0, 1);
                                 firebaseCollectionReference.add(note);
                             }
                         }).show();
@@ -96,9 +122,10 @@ public class MainActivity extends AppCompatActivity {
         adapter.setOnLongItemClickListener(new NoteAdapter.OnLongItemClickListener() {
             @Override
             public void onLongItemClick(Note note) {
-                if (note.getNoteColor() != note.NOTE_COLOR_YELLOW)
+                if (note.getNoteColor() != note.NOTE_COLOR_YELLOW){
+                    soundPool.play(turn_orangeSound, 1, 1, 0, 0, 1);
                     firebaseCollectionReference.document(note.getId()).update("noteColor", note.NOTE_COLOR_YELLOW);
-            }
+            }}
         });
 
         checkPermission();
@@ -158,6 +185,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 final List<Note> notesBackup = new ArrayList<>();
+                soundPool.play(finishSound, 1, 1, 0, 0, 1);
                 for (Note currentNote : notes){
                     if (currentNote.getNoteColor() == Note.NOTE_COLOR_GREEN){
                         firebaseCollectionReference.document(currentNote.getId()).delete();
@@ -168,6 +196,7 @@ public class MainActivity extends AppCompatActivity {
                         .setAction("UNDO", new View.OnClickListener() {
                             @Override
                             public void onClick(View view) {
+                                soundPool.play(undoSound, 1, 1, 0, 0, 1);
                                 for (Note currentBackupNote : notesBackup){
                                     Log.d("Inhalt notesBackup AddingFirebaseSchleife",currentBackupNote.getContent()+" "+currentBackupNote.getNoteColor());
                                     firebaseCollectionReference.add(currentBackupNote);}
@@ -248,5 +277,28 @@ public class MainActivity extends AppCompatActivity {
         sendIntent.putExtra("jid", number + "@s.whatsapp.net");
         sendIntent.setPackage("com.whatsapp");
         startActivity(sendIntent);
+    }
+
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        switch (keyCode) {
+            case KeyEvent.KEYCODE_VOLUME_UP:
+                audio.adjustStreamVolume(AudioManager.STREAM_MUSIC,
+                        AudioManager.ADJUST_RAISE, AudioManager.FLAG_SHOW_UI);
+                return true;
+            case KeyEvent.KEYCODE_VOLUME_DOWN:
+                audio.adjustStreamVolume(AudioManager.STREAM_MUSIC,
+                        AudioManager.ADJUST_LOWER, AudioManager.FLAG_SHOW_UI);
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        soundPool.release();
+        soundPool = null;
     }
 }
