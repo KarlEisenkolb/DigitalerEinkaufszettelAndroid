@@ -10,6 +10,15 @@ import android.media.SoundPool;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.provider.Settings;
+import android.speech.RecognitionListener;
+import android.speech.RecognizerIntent;
+import android.speech.SpeechRecognizer;
+import android.util.Log;
+import android.view.KeyEvent;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.view.View;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
@@ -20,6 +29,10 @@ import com.google.firebase.firestore.FirebaseFirestoreException;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.content.ContextCompat;
@@ -27,29 +40,10 @@ import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import android.provider.Settings;
-import android.speech.RecognitionListener;
-import android.speech.RecognizerIntent;
-import android.speech.SpeechRecognizer;
-import android.util.Log;
-import android.view.KeyEvent;
-import android.view.MenuInflater;
-import android.view.MotionEvent;
-import android.view.View;
-import android.view.Menu;
-import android.view.MenuItem;
-import android.widget.EditText;
-import android.widget.Toast;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Locale;
-
 public class MainActivity extends AppCompatActivity {
     private AudioManager audio;
     private SoundPool soundPool;
-    private int deleteSound, finishSound, turn_orangeSound, undoSound;
+    private int deleteSound, finishSound, turn_orangeSound, turn_greenSound, undoSound;
 
     static List<Note> notes = new ArrayList<>();
     //static List<Note> notesBackup = new ArrayList<>();
@@ -79,6 +73,7 @@ public class MainActivity extends AppCompatActivity {
         deleteSound = soundPool.load(this, R.raw.delete, 1);
         finishSound = soundPool.load(this, R.raw.finish, 1);
         turn_orangeSound = soundPool.load(this, R.raw.turn_orange, 1);
+        turn_greenSound = soundPool.load(this, R.raw.turn_green, 1);
         undoSound = soundPool.load(this, R.raw.undo, 1);
 
         final RecyclerView recyclerView = findViewById(R.id.recycler_view);
@@ -96,13 +91,13 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onSwiped(RecyclerView.ViewHolder viewHolder, int direction) {
                 final Note note = adapter.getNoteAt(viewHolder.getAdapterPosition());
-                soundPool.play(deleteSound, 1, 1, 0, 0, 1);
+                soundPool.play(deleteSound, 0.4F, 0.4F, 0, 0, 1);
                 firebaseCollectionReference.document(adapter.getIdAt(viewHolder.getAdapterPosition())).delete();
                 Snackbar.make(recyclerView, "Einkaufseintrag gelöscht!", Snackbar.LENGTH_LONG)
                         .setAction("UNDO", new View.OnClickListener() {
                             @Override
                             public void onClick(View view) {
-                                soundPool.play(undoSound, 1, 1, 0, 0, 1);
+                                soundPool.play(undoSound, 0.1F, 0.1F, 0, 0, 1);
                                 firebaseCollectionReference.add(note);
                             }
                         }).show();
@@ -112,20 +107,24 @@ public class MainActivity extends AppCompatActivity {
         adapter.setOnItemClickListener(new NoteAdapter.OnItemClickListener() {
             @Override
             public void onItemClick(Note note) {
-                if (note.getNoteColor() == note.NOTE_NO_COLOR)
+                if (note.getNoteColor() == note.NOTE_NO_COLOR) {
+                    soundPool.play(turn_greenSound, 0.07F, 0.07F, 0, 0, 1);
                     firebaseCollectionReference.document(note.getId()).update("noteColor", note.NOTE_COLOR_GREEN);
-                else
+                } else {
+                    soundPool.play(turn_greenSound, 0.07F, 0.07F, 0, 0, 1);
                     firebaseCollectionReference.document(note.getId()).update("noteColor", note.NOTE_NO_COLOR);
+                }
             }
         });
 
         adapter.setOnLongItemClickListener(new NoteAdapter.OnLongItemClickListener() {
             @Override
             public void onLongItemClick(Note note) {
-                if (note.getNoteColor() != note.NOTE_COLOR_YELLOW){
-                    soundPool.play(turn_orangeSound, 1, 1, 0, 0, 1);
+                if (note.getNoteColor() != note.NOTE_COLOR_YELLOW) {
+                    soundPool.play(turn_orangeSound, 0.2F, 0.2F, 0, 0, 1);
                     firebaseCollectionReference.document(note.getId()).update("noteColor", note.NOTE_COLOR_YELLOW);
-            }}
+                }
+            }
         });
 
         checkPermission();
@@ -141,17 +140,28 @@ public class MainActivity extends AppCompatActivity {
 
         mSpeechRecognizer.setRecognitionListener(new RecognitionListener() {
             @Override
-            public void onReadyForSpeech(Bundle params){}
+            public void onReadyForSpeech(Bundle params) {
+            }
+
             @Override
-            public void onBeginningOfSpeech(){}
+            public void onBeginningOfSpeech() {
+            }
+
             @Override
-            public void onRmsChanged(float rmsdB){}
+            public void onRmsChanged(float rmsdB) {
+            }
+
             @Override
-            public void onBufferReceived(byte[] buffer){}
+            public void onBufferReceived(byte[] buffer) {
+            }
+
             @Override
-            public void onEndOfSpeech() {}
+            public void onEndOfSpeech() {
+            }
+
             @Override
-            public void onError(int error) {}
+            public void onError(int error) {
+            }
 
             @Override
             public void onResults(Bundle bundle) {
@@ -161,23 +171,26 @@ public class MainActivity extends AppCompatActivity {
 
                 //displaying the first match
                 if (matches != null)
-                firebaseCollectionReference.add(new Note(matches.get(0)));
+                    firebaseCollectionReference.add(new Note(matches.get(0)));
             }
 
             @Override
-            public void onPartialResults(Bundle bundle) {}
+            public void onPartialResults(Bundle bundle) {
+            }
+
             @Override
-            public void onEvent(int i, Bundle bundle) {}
+            public void onEvent(int i, Bundle bundle) {
+            }
         });
 
 
         FloatingActionButton fab_mic = findViewById(R.id.fab_mic);
         fab_mic.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                mSpeechRecognizer.startListening(mSpeechRecognizerIntent);
-            }
-        }
+                                       @Override
+                                       public void onClick(View v) {
+                                           mSpeechRecognizer.startListening(mSpeechRecognizerIntent);
+                                       }
+                                   }
         );
 
         FloatingActionButton fab_done = findViewById(R.id.fab_shoppingDone);
@@ -185,21 +198,23 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 final List<Note> notesBackup = new ArrayList<>();
-                soundPool.play(finishSound, 1, 1, 0, 0, 1);
-                for (Note currentNote : notes){
-                    if (currentNote.getNoteColor() == Note.NOTE_COLOR_GREEN){
+                soundPool.play(finishSound, 0.2F, 0.2F, 0, 0, 1);
+                for (Note currentNote : notes) {
+                    if (currentNote.getNoteColor() == Note.NOTE_COLOR_GREEN) {
                         firebaseCollectionReference.document(currentNote.getId()).delete();
-                        notesBackup.add(currentNote);}
+                        notesBackup.add(currentNote);
+                    }
                 }
 
                 Snackbar.make(recyclerView, "Alle Erledigten gelöscht!", Snackbar.LENGTH_LONG)
                         .setAction("UNDO", new View.OnClickListener() {
                             @Override
                             public void onClick(View view) {
-                                soundPool.play(undoSound, 1, 1, 0, 0, 1);
-                                for (Note currentBackupNote : notesBackup){
-                                    Log.d("Inhalt notesBackup AddingFirebaseSchleife",currentBackupNote.getContent()+" "+currentBackupNote.getNoteColor());
-                                    firebaseCollectionReference.add(currentBackupNote);}
+                                soundPool.play(undoSound, 0.1F, 0.1F, 0, 0, 1);
+                                for (Note currentBackupNote : notesBackup) {
+                                    Log.d("Inhalt notesBackup AddingFirebaseSchleife", currentBackupNote.getContent() + " " + currentBackupNote.getNoteColor());
+                                    firebaseCollectionReference.add(currentBackupNote);
+                                }
                             }
                         }).show();
             }
@@ -224,7 +239,7 @@ public class MainActivity extends AppCompatActivity {
         if (id == R.id.action_settings) {
             return true;
         }
-        if (id == R.id.messageWhatsApp){
+        if (id == R.id.messageWhatsApp) {
             openWhatsappContact("4915738975901");
             return true;
         }
@@ -253,13 +268,13 @@ public class MainActivity extends AppCompatActivity {
                     return;
                 }
                 notes.clear();
-                Log.d("Tick notes.clear","notes.clear");
+                Log.d("Tick notes.clear", "notes.clear");
                 for (QueryDocumentSnapshot documentSnapshot : queryDocumentSnapshots) {
                     String content = documentSnapshot.getString("content");
                     String id = documentSnapshot.getId();
                     long noteColor = documentSnapshot.getLong("noteColor");
 
-                    Log.d("Tick queryExtraktion",content+ " " + id+ " " + noteColor);
+                    Log.d("Tick queryExtraktion", content + " " + id + " " + noteColor);
 
                     Note note = new Note(content, id, noteColor);
                     notes.add(note);
