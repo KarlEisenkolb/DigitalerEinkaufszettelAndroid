@@ -1,6 +1,7 @@
 package com.example.android.interaktivereinkaufszettel;
 
 import android.graphics.Color;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -14,9 +15,13 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NoteHolder> {
-    private List<Note> notes = new ArrayList<>();
+    private List<Note> notes;
     private OnItemClickListener listenerShort;
     private OnLongItemClickListener listenerLong;
+
+    public NoteAdapter(List<Note> notes) {
+        this.notes = notes;
+    }
 
     @NonNull
     @Override
@@ -31,24 +36,22 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NoteHolder> {
         Note currentNote = notes.get(position);
         holder.textViewContent.setText(currentNote.getContent());
         //holder.textViewId.setText(currentNote.getId());
-
-        if (currentNote.getNoteColor() == Note.NOTE_COLOR_GREEN)
+        Log.d("onBind ", "position: "+position+" adapterPos: "+currentNote.getAdapterPos()+" currentColor: "+currentNote.getNoteColor());
+        if (currentNote.getNoteColor() == Note.NOTE_COLOR_GREEN){
             holder.itemViewId.setBackgroundColor(Color.parseColor("#388E3C"));
-        else if (currentNote.getNoteColor() == Note.NOTE_COLOR_YELLOW)
+            Log.d("onBind ", "Green");}
+        else if (currentNote.getNoteColor() == Note.NOTE_COLOR_YELLOW){
             holder.itemViewId.setBackgroundColor(Color.parseColor("#FF8F00"));
-        else
+            Log.d("onBind ", "Yellow");}
+        else{
             holder.itemViewId.setBackgroundColor(Color.parseColor("#E0E0E0"));
+            Log.d("onBind ", "Gray");}
 
     }
 
     @Override
     public int getItemCount() {
         return notes.size();
-    }
-
-    public void setNotes(List<Note> notes) {
-        this.notes = notes;
-        notifyDataSetChanged();
     }
 
     public String getIdAt(int position) {
