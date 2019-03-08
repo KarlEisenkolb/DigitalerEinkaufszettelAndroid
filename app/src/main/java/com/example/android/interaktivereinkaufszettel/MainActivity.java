@@ -8,6 +8,7 @@ import android.media.AudioAttributes;
 import android.media.AudioManager;
 import android.media.SoundPool;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
@@ -20,6 +21,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 
+import com.firebase.ui.firestore.FirestoreRecyclerOptions;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.firestore.CollectionReference;
@@ -27,7 +29,10 @@ import com.google.firebase.firestore.DocumentChange;
 import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreException;
+import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QuerySnapshot;
+import com.google.firebase.firestore.WriteBatch;
+import com.google.firebase.firestore.core.OrderBy;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -45,20 +50,18 @@ public class MainActivity extends AppCompatActivity {
     private SoundPool soundPool;
     private int deleteSound, finishSound, turn_orangeSound, turn_greenSound, undoSound;
 
-    private List<Note> notes;
-    public static final String DOC_REFERENCE = "EinkaufszettelCollection";
+    public static final String DOC_REFERENCE = "EinkaufszettelCollectionTest";
     static FirebaseFirestore firebaseFirestore = FirebaseFirestore.getInstance();
     static CollectionReference firebaseCollectionReference = firebaseFirestore.collection(DOC_REFERENCE);
     private NoteAdapter adapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-
-        notes = new ArrayList<>();
 
         audio = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
         AudioAttributes audioAttributes = new AudioAttributes.Builder()
@@ -77,10 +80,14 @@ public class MainActivity extends AppCompatActivity {
         turn_greenSound = soundPool.load(this, R.raw.turn_green, 1);
         undoSound = soundPool.load(this, R.raw.undo, 1);
 
+        FirestoreRecyclerOptions<Note> options = new FirestoreRecyclerOptions.Builder<Note>()
+                .setQuery(firebaseCollectionReference.orderBy("adapterPos", Query.Direction.DESCENDING), Note.class)
+                .build();
+
         final RecyclerView recyclerView = findViewById(R.id.recycler_view);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         recyclerView.setNestedScrollingEnabled(false);
-        adapter = new NoteAdapter(notes);
+        adapter = new NoteAdapter(options);
         recyclerView.setAdapter(adapter);
 
         new ItemTouchHelper(new ItemTouchHelper.SimpleCallback(0,
@@ -90,21 +97,18 @@ public class MainActivity extends AppCompatActivity {
                 return false;
             }
 
-            @Override
+             @Override
             public void onSwiped(final RecyclerView.ViewHolder viewHolder, int direction) {
-                final Note note = adapter.getNoteAt(viewHolder.getAdapterPosition());
-                final int adapterPos = (int) note.getAdapterPos();
+                final Note note = adapter.getSnapshots().get(viewHolder.getAdapterPosition());
 
                 soundPool.play(deleteSound, 0.4F, 0.4F, 0, 0, 1);
-                firebaseCollectionReference.document(adapter.getIdAt(viewHolder.getAdapterPosition())).delete();
-                adjustListPositionsFirestore(adapterPos, Note.NOTE_REMOVE);
+                 adapter.deleteNote(viewHolder.getAdapterPosition());
                 Snackbar.make(recyclerView, "Einkaufseintrag gelöscht!", Snackbar.LENGTH_LONG)
                         .setAction("UNDO", new View.OnClickListener() {
                             @Override
                             public void onClick(View view) {
                                 soundPool.play(undoSound, 0.1F, 0.1F, 0, 0, 1);
                                 firebaseCollectionReference.add(note);
-                                adjustListPositionsFirestore(adapterPos, Note.NOTE_ADD);
                             }
                         }).show();
             }
@@ -112,23 +116,23 @@ public class MainActivity extends AppCompatActivity {
 
         adapter.setOnItemClickListener(new NoteAdapter.OnItemClickListener() {
             @Override
-            public void onItemClick(Note note) {
+            public void onItemClick(Note note, String id) {
                 if (note.getNoteColor() == note.NOTE_NO_COLOR) {
                     soundPool.play(turn_greenSound, 0.07F, 0.07F, 0, 0, 1);
-                    firebaseCollectionReference.document(note.getId()).update("noteColor", note.NOTE_COLOR_GREEN);
+                    firebaseCollectionReference.document(id).update("noteColor", note.NOTE_COLOR_GREEN);
                 } else {
                     soundPool.play(turn_greenSound, 0.07F, 0.07F, 0, 0, 1);
-                    firebaseCollectionReference.document(note.getId()).update("noteColor", note.NOTE_NO_COLOR);
+                    firebaseCollectionReference.document(id).update("noteColor", note.NOTE_NO_COLOR);
                 }
             }
         });
 
         adapter.setOnLongItemClickListener(new NoteAdapter.OnLongItemClickListener() {
             @Override
-            public void onLongItemClick(Note note) {
+            public void onLongItemClick(Note note, String id) {
                 if (note.getNoteColor() != note.NOTE_COLOR_YELLOW) {
                     soundPool.play(turn_orangeSound, 0.2F, 0.2F, 0, 0, 1);
-                    firebaseCollectionReference.document(note.getId()).update("noteColor", note.NOTE_COLOR_YELLOW);
+                    firebaseCollectionReference.document(id).update("noteColor", note.NOTE_COLOR_YELLOW);
                 }
             }
         });
@@ -177,8 +181,7 @@ public class MainActivity extends AppCompatActivity {
 
                 //displaying the first match
                 if (matches != null)
-                    firebaseCollectionReference.add(new Note(matches.get(0), 0));
-                adjustListPositionsFirestore(0, Note.NOTE_ADD);
+                    firebaseCollectionReference.add(new Note(matches.get(0), adapter.getSnapshots().size()));
             }
 
             @Override
@@ -204,47 +207,33 @@ public class MainActivity extends AppCompatActivity {
         fab_done.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                final List<Note> notesBackup = new ArrayList<>();
+
+                final List<Note> notesGreen = new ArrayList();
+                WriteBatch batch = firebaseFirestore.batch();
+
                 soundPool.play(finishSound, 0.2F, 0.2F, 0, 0, 1);
-                for (Note currentNote : notes) {
-                    if (currentNote.getNoteColor() == Note.NOTE_COLOR_GREEN) {
-                        firebaseCollectionReference.document(currentNote.getId()).delete();
-                        notesBackup.add(currentNote);
+                for(int i=0; i<adapter.getSnapshots().size(); i++){
+                    if (adapter.getSnapshots().get(i).getNoteColor() == Note.NOTE_COLOR_GREEN) {
+                        batch.delete(firebaseCollectionReference.document(adapter.getSnapshots().getSnapshot(i).getId()));
+                        notesGreen.add(adapter.getSnapshots().get(i));
                     }
                 }
+
+                batch.commit();
 
                 Snackbar.make(recyclerView, "Alle Erledigten gelöscht!", Snackbar.LENGTH_LONG)
                         .setAction("UNDO", new View.OnClickListener() {
                             @Override
                             public void onClick(View view) {
                                 soundPool.play(undoSound, 0.1F, 0.1F, 0, 0, 1);
-                                for (Note currentBackupNote : notesBackup) {
-                                    Log.d("Inhalt notesBackup AddingFirebaseSchleife", currentBackupNote.getContent() + " " + currentBackupNote.getNoteColor());
-                                    firebaseCollectionReference.add(currentBackupNote);
+                                for (Note currentNote : notesGreen){
+                                    firebaseCollectionReference.add(new Note(currentNote.getContent(), currentNote.getAdapterPos(), Note.NOTE_COLOR_GREEN));
                                 }
                             }
                         }).show();
             }
         });
-    }
 
-    private void adjustListPositionsFirestore(int position, int removeOrAdd) {
-        int positionAdjuster = 0;
-
-        if (removeOrAdd == Note.NOTE_REMOVE)
-            positionAdjuster = 1;
-
-            for (int i = (position + positionAdjuster); i <= (notes.size() - 1); i++) {
-                switch(removeOrAdd) {
-                    case Note.NOTE_ADD:
-                    firebaseCollectionReference.document(notes.get(i).getId()).update("adapterPos", notes.get(i).getAdapterPos() + 1);
-                    break;
-
-                    case Note.NOTE_REMOVE:
-                    firebaseCollectionReference.document(notes.get(i).getId()).update("adapterPos", notes.get(i).getAdapterPos() - 1);
-                    break;
-                }
-        }
     }
 
     @Override
@@ -286,63 +275,27 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onStart() {
         super.onStart();
-        notes.clear();
-        firebaseCollectionReference.orderBy("adapterPos").addSnapshotListener(this, new EventListener<QuerySnapshot>() {
-            @Override
-            public void onEvent(QuerySnapshot queryDocumentSnapshots, FirebaseFirestoreException e) {
-                //Toast.makeText(MainActivity.this, "onEventTriggered", Toast.LENGTH_SHORT).show();
-                if (e != null) {
-                    return;
-                }
-
-                for (DocumentChange dc : queryDocumentSnapshots.getDocumentChanges()) {
-
-                    Note note = extractData(dc);
-                    int adapterPos = dc.getDocument().getLong("adapterPos").intValue();
-
-                    switch (dc.getType()) {
-                        case ADDED:
-                            Log.d("Firebase Added ", "at adapterPos " + adapterPos);
-                            notes.add(adapterPos, note);
-                            adapter.notifyItemInserted(adapterPos);
-                            break;
-                        case MODIFIED:
-                            Log.d("Firebase Modified ", "at adapterPos " + adapterPos);
-                            notes.set(adapterPos, note);
-                            adapter.notifyItemChanged(adapterPos);
-                            break;
-                        case REMOVED:
-                            Log.d("Firebase removed ", "at adapterPos " + adapterPos);
-                            notes.remove(adapterPos);
-                            adapter.notifyItemRemoved(adapterPos);
-                            break;
-                    }
-                }
-
-                for (int i = 0; i < notes.size(); i++) {
-                    Note test = notes.get(i);
-                    Log.d("NoteListLog", test.getContent() + " " + test.getId() + " " + test.getNoteColor() + " " + test.getAdapterPos());
-                }
-            }
-        });
+        adapter.startListening();
     }
 
+    @Override
+    protected void onPause() {
+        super.onPause();
+        for(int i=1; i<=adapter.getSnapshots().size(); i++){
+            firebaseCollectionReference.document(adapter.getSnapshots().getSnapshot(i-1).getId()).update("adapterPos", adapter.getSnapshots().size()-i);
+        }
+    }
 
-    private Note extractData(DocumentChange dc) {
-
-        String content = dc.getDocument().getString("content");
-        String id = dc.getDocument().getId();
-        long noteColor = dc.getDocument().getLong("noteColor");
-        int adapterPos = dc.getDocument().getLong("adapterPos").intValue();
-
-        Log.d("Firebase extractData", content + " " + id + " " + noteColor + " " + adapterPos);
-        return new Note(content, id, noteColor, adapterPos);
+    @Override
+    protected void onStop() {
+        super.onStop();
+        adapter.stopListening();
     }
 
     void openWhatsappContact(String number) {
         Intent sendIntent = new Intent();
         sendIntent.setAction(Intent.ACTION_SEND);
-        sendIntent.putExtra(Intent.EXTRA_TEXT, " ");
+        sendIntent.putExtra(Intent.EXTRA_TEXT, "Einkaufszettel");
         sendIntent.setType("text/plain");
         sendIntent.putExtra("jid", number + "@s.whatsapp.net");
         sendIntent.setPackage("com.whatsapp");
