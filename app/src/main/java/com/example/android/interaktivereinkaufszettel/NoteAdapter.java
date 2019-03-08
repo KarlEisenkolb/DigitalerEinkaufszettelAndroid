@@ -8,19 +8,22 @@ import android.view.ViewGroup;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import com.firebase.ui.firestore.FirestoreRecyclerAdapter;
+import com.firebase.ui.firestore.FirestoreRecyclerOptions;
+
 import java.util.ArrayList;
 import java.util.List;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
-public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NoteHolder> {
-    private List<Note> notes;
+public class NoteAdapter extends FirestoreRecyclerAdapter<Note, NoteAdapter.NoteHolder> {
+
     private OnItemClickListener listenerShort;
     private OnLongItemClickListener listenerLong;
 
-    public NoteAdapter(List<Note> notes) {
-        this.notes = notes;
+    public NoteAdapter(@NonNull FirestoreRecyclerOptions<Note> options) {
+        super(options);
     }
 
     @NonNull
@@ -32,15 +35,13 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NoteHolder> {
     }
 
     @Override
-    public void onBindViewHolder(@NonNull NoteHolder holder, int position) {
-        Note currentNote = notes.get(position);
-        holder.textViewContent.setText(currentNote.getContent());
-        //holder.textViewId.setText(currentNote.getId());
-        Log.d("onBind ", "position: "+position+" adapterPos: "+currentNote.getAdapterPos()+" currentColor: "+currentNote.getNoteColor());
-        if (currentNote.getNoteColor() == Note.NOTE_COLOR_GREEN){
+    public void onBindViewHolder(@NonNull NoteHolder holder, int position, @NonNull Note note) {
+        holder.textViewContent.setText(note.getContent());
+
+        if (note.getNoteColor() == Note.NOTE_COLOR_GREEN){
             holder.itemViewId.setBackgroundColor(Color.parseColor("#388E3C"));
             Log.d("onBind ", "Green");}
-        else if (currentNote.getNoteColor() == Note.NOTE_COLOR_YELLOW){
+        else if (note.getNoteColor() == Note.NOTE_COLOR_YELLOW){
             holder.itemViewId.setBackgroundColor(Color.parseColor("#FF8F00"));
             Log.d("onBind ", "Yellow");}
         else{
@@ -49,28 +50,17 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NoteHolder> {
 
     }
 
-    @Override
-    public int getItemCount() {
-        return notes.size();
-    }
-
-    public String getIdAt(int position) {
-        return notes.get(position).getId();
-    }
-
-    public Note getNoteAt(int position) {
-        return notes.get(position);
+    public void deleteNote(int position) {
+        getSnapshots().getSnapshot(position).getReference().delete();
     }
 
     class NoteHolder extends RecyclerView.ViewHolder {
         private TextView textViewContent;
-        //private TextView textViewId;
         private RelativeLayout itemViewId;
 
         public NoteHolder(View itemView) {
             super(itemView);
             textViewContent = itemView.findViewById(R.id.text_view_content);
-            //textViewId = itemView.findViewById(R.id.text_view_id);
             itemViewId = itemView.findViewById(R.id.list_item_color);
 
             itemView.setOnClickListener(new View.OnClickListener() {
@@ -78,7 +68,7 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NoteHolder> {
                 public void onClick(View v) {
                     int position = getAdapterPosition();
                     if (listenerShort != null && position != RecyclerView.NO_POSITION) {
-                        listenerShort.onItemClick(notes.get(position));
+                        listenerShort.onItemClick(getSnapshots().get(position), getSnapshots().getSnapshot(position).getId());
                     }
                 }
             });
@@ -88,7 +78,7 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NoteHolder> {
                 public boolean onLongClick(View v) {
                     int position = getAdapterPosition();
                     if (listenerLong != null && position != RecyclerView.NO_POSITION) {
-                        listenerLong.onLongItemClick(notes.get(position));
+                        listenerLong.onLongItemClick(getSnapshots().get(position), getSnapshots().getSnapshot(position).getId());
                     }
                     return true;
                 }
@@ -97,11 +87,11 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NoteHolder> {
     }
 
     public interface OnItemClickListener {
-        void onItemClick(Note note);
+        void onItemClick(Note note, String id);
     }
 
     public interface OnLongItemClickListener {
-        void onLongItemClick(Note note);
+        void onLongItemClick(Note note, String id);
     }
 
     public void setOnItemClickListener(OnItemClickListener listenerShort) {
