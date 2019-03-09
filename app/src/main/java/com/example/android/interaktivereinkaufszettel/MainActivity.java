@@ -4,6 +4,7 @@ import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.media.AudioAttributes;
 import android.media.AudioManager;
 import android.media.SoundPool;
@@ -20,9 +21,13 @@ import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 
 import com.firebase.ui.firestore.FirestoreRecyclerOptions;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.android.material.resources.TextAppearance;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentChange;
@@ -39,6 +44,7 @@ import java.util.List;
 import java.util.Locale;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.view.ContextThemeWrapper;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.ItemTouchHelper;
@@ -84,11 +90,38 @@ public class MainActivity extends AppCompatActivity {
                 .setQuery(firebaseCollectionReference.orderBy("adapterPos", Query.Direction.DESCENDING), Note.class)
                 .build();
 
-        final RecyclerView recyclerView = findViewById(R.id.recycler_view);
+        List<String> category = new ArrayList<>();
+        category.add("Obst und Gemüse");
+        category.add("Fisch und Fleisch");
+        category.add("Verpackte Produkte");
+        category.add("Getränke");
+        category.add("Milch- und Kühlprodukte");
+        category.add("Drogerieprodukte");
+
+        LinearLayout main_layout = findViewById(R.id.main_layout);
+        for (String currentCategory : category) {
+
+
+            TextView categoryView = new TextView(new ContextThemeWrapper(this, R.style.categoryStyle), null, 0);
+            categoryView.setText(currentCategory);
+            categoryView.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, (int) dpToPx(this, 90)));
+            int dp = (int) dpToPx(this, 15);
+            categoryView.setPadding(dp, dp, dp, dp);
+            categoryView.setBackgroundColor(Color.parseColor("#212121"));
+            main_layout.addView(categoryView);
+
+        }
+
+        final RecyclerView recyclerView = new RecyclerView(this);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         recyclerView.setNestedScrollingEnabled(false);
         adapter = new NoteAdapter(options);
         recyclerView.setAdapter(adapter);
+        main_layout.addView(recyclerView);
+
+        View pufferView = new View(this);
+        pufferView.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, (int) dpToPx(this, 200)));
+        main_layout.addView(pufferView);
 
         new ItemTouchHelper(new ItemTouchHelper.SimpleCallback(0,
                 ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT) {
@@ -323,6 +356,12 @@ public class MainActivity extends AppCompatActivity {
         super.onDestroy();
         soundPool.release();
         soundPool = null;
+    }
+
+    public static float dpToPx(Context context, float dp) {
+        float density = context.getResources().getDisplayMetrics().density;
+        float pixel = dp * density;
+        return pixel;
     }
 
 }
