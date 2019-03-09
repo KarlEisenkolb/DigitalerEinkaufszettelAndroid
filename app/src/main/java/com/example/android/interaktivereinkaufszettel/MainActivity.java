@@ -22,6 +22,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -52,14 +53,22 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 public class MainActivity extends AppCompatActivity {
+    static int which_category=0;
     private AudioManager audio;
     private SoundPool soundPool;
     private int deleteSound, finishSound, turn_orangeSound, turn_greenSound, undoSound;
+    private FirebaseFirestore firebaseFirestore = FirebaseFirestore.getInstance();
+    private String[] categoryNameArray;
+    private NoteAdapter[] adapterArray;
+    private CollectionReference[] referenceArray;
+    private Button[] categoryButtonArray;
+    private RecyclerView[] recyclerViewArray;
 
-    public static final String DOC_REFERENCE = "EinkaufszettelCollectionTest";
-    static FirebaseFirestore firebaseFirestore = FirebaseFirestore.getInstance();
-    static CollectionReference firebaseCollectionReference = firebaseFirestore.collection(DOC_REFERENCE);
-    private NoteAdapter adapter;
+    public static float dpToPx(Context context, float dp) {
+        float density = context.getResources().getDisplayMetrics().density;
+        float pixel = dp * density;
+        return pixel;
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -68,109 +77,6 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-
-        audio = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
-        AudioAttributes audioAttributes = new AudioAttributes.Builder()
-                .setUsage(AudioAttributes.USAGE_ASSISTANCE_SONIFICATION)
-                .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
-                .build();
-
-        soundPool = new SoundPool.Builder()
-                .setMaxStreams(2)
-                .setAudioAttributes(audioAttributes)
-                .build();
-
-        deleteSound = soundPool.load(this, R.raw.delete, 1);
-        finishSound = soundPool.load(this, R.raw.finish, 1);
-        turn_orangeSound = soundPool.load(this, R.raw.turn_orange, 1);
-        turn_greenSound = soundPool.load(this, R.raw.turn_green, 1);
-        undoSound = soundPool.load(this, R.raw.undo, 1);
-
-        FirestoreRecyclerOptions<Note> options = new FirestoreRecyclerOptions.Builder<Note>()
-                .setQuery(firebaseCollectionReference.orderBy("adapterPos", Query.Direction.DESCENDING), Note.class)
-                .build();
-
-        List<String> category = new ArrayList<>();
-        category.add("Obst und Gemüse");
-        category.add("Fisch und Fleisch");
-        category.add("Verpackte Produkte");
-        category.add("Getränke");
-        category.add("Milch- und Kühlprodukte");
-        category.add("Drogerieprodukte");
-
-        LinearLayout main_layout = findViewById(R.id.main_layout);
-        for (String currentCategory : category) {
-
-
-            TextView categoryView = new TextView(new ContextThemeWrapper(this, R.style.categoryStyle), null, 0);
-            categoryView.setText(currentCategory);
-            categoryView.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, (int) dpToPx(this, 90)));
-            int dp = (int) dpToPx(this, 15);
-            categoryView.setPadding(dp, dp, dp, dp);
-            categoryView.setBackgroundColor(Color.parseColor("#212121"));
-            main_layout.addView(categoryView);
-
-        }
-
-        final RecyclerView recyclerView = new RecyclerView(this);
-        recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        recyclerView.setNestedScrollingEnabled(false);
-        adapter = new NoteAdapter(options);
-        recyclerView.setAdapter(adapter);
-        main_layout.addView(recyclerView);
-
-        View pufferView = new View(this);
-        pufferView.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, (int) dpToPx(this, 200)));
-        main_layout.addView(pufferView);
-
-        new ItemTouchHelper(new ItemTouchHelper.SimpleCallback(0,
-                ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT) {
-            @Override
-            public boolean onMove(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, RecyclerView.ViewHolder target) {
-                return false;
-            }
-
-             @Override
-            public void onSwiped(final RecyclerView.ViewHolder viewHolder, int direction) {
-                final Note note = adapter.getSnapshots().get(viewHolder.getAdapterPosition());
-
-                soundPool.play(deleteSound, 0.4F, 0.4F, 0, 0, 1);
-                 adapter.deleteNote(viewHolder.getAdapterPosition());
-                Snackbar.make(recyclerView, "Einkaufseintrag gelöscht!", Snackbar.LENGTH_LONG)
-                        .setAction("UNDO", new View.OnClickListener() {
-                            @Override
-                            public void onClick(View view) {
-                                soundPool.play(undoSound, 0.1F, 0.1F, 0, 0, 1);
-                                firebaseCollectionReference.add(note);
-                            }
-                        }).show();
-            }
-        }).attachToRecyclerView(recyclerView);
-
-        adapter.setOnItemClickListener(new NoteAdapter.OnItemClickListener() {
-            @Override
-            public void onItemClick(Note note, String id) {
-                if (note.getNoteColor() == note.NOTE_NO_COLOR) {
-                    soundPool.play(turn_greenSound, 0.07F, 0.07F, 0, 0, 1);
-                    firebaseCollectionReference.document(id).update("noteColor", note.NOTE_COLOR_GREEN);
-                } else {
-                    soundPool.play(turn_greenSound, 0.07F, 0.07F, 0, 0, 1);
-                    firebaseCollectionReference.document(id).update("noteColor", note.NOTE_NO_COLOR);
-                }
-            }
-        });
-
-        adapter.setOnLongItemClickListener(new NoteAdapter.OnLongItemClickListener() {
-            @Override
-            public void onLongItemClick(Note note, String id) {
-                if (note.getNoteColor() != note.NOTE_COLOR_YELLOW) {
-                    soundPool.play(turn_orangeSound, 0.2F, 0.2F, 0, 0, 1);
-                    firebaseCollectionReference.document(id).update("noteColor", note.NOTE_COLOR_YELLOW);
-                }
-            }
-        });
-
-        checkPermission();
 
         final SpeechRecognizer mSpeechRecognizer = SpeechRecognizer.createSpeechRecognizer(this);
 
@@ -214,7 +120,7 @@ public class MainActivity extends AppCompatActivity {
 
                 //displaying the first match
                 if (matches != null)
-                    firebaseCollectionReference.add(new Note(matches.get(0), adapter.getSnapshots().size()));
+                    referenceArray[which_category].add(new Note(matches.get(0), adapterArray[which_category].getSnapshots().size()));
             }
 
             @Override
@@ -226,17 +132,125 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        audio = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+        AudioAttributes audioAttributes = new AudioAttributes.Builder()
+                .setUsage(AudioAttributes.USAGE_ASSISTANCE_SONIFICATION)
+                .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                .build();
 
-        FloatingActionButton fab_mic = findViewById(R.id.fab_mic);
-        fab_mic.setOnClickListener(new View.OnClickListener() {
-                                       @Override
-                                       public void onClick(View v) {
-                                           mSpeechRecognizer.startListening(mSpeechRecognizerIntent);
-                                       }
-                                   }
-        );
+        soundPool = new SoundPool.Builder()
+                .setMaxStreams(2)
+                .setAudioAttributes(audioAttributes)
+                .build();
 
-        FloatingActionButton fab_done = findViewById(R.id.fab_shoppingDone);
+        deleteSound = soundPool.load(this, R.raw.delete, 1);
+        finishSound = soundPool.load(this, R.raw.finish, 1);
+        turn_orangeSound = soundPool.load(this, R.raw.turn_orange, 1);
+        turn_greenSound = soundPool.load(this, R.raw.turn_green, 1);
+        undoSound = soundPool.load(this, R.raw.undo, 1);
+
+        int category_count =6;
+        categoryNameArray = new String[category_count];
+        categoryNameArray[0]="Obst und Gemüse";
+        categoryNameArray[1]="Fisch und Fleisch";
+        categoryNameArray[2]="Verpackte Produkte";
+        categoryNameArray[3]="Getränke";
+        categoryNameArray[4]="Milch- und Kühlprodukte";
+        categoryNameArray[5]="Drogerieprodukte";
+
+        adapterArray = new NoteAdapter[category_count];
+        referenceArray = new CollectionReference[category_count];
+        categoryButtonArray = new Button[category_count];
+        recyclerViewArray = new RecyclerView[category_count];
+
+        LinearLayout main_layout = findViewById(R.id.main_layout);
+        for (int i=0; i<categoryNameArray.length; i++) {
+            final int final_i = i;
+
+            referenceArray[i] = firebaseFirestore.collection(categoryNameArray[i]);
+
+            FirestoreRecyclerOptions<Note> options = new FirestoreRecyclerOptions.Builder<Note>()
+                    .setQuery(referenceArray[i].orderBy("adapterPos", Query.Direction.DESCENDING), Note.class)
+                    .build();
+
+            categoryButtonArray[i] = new Button(new ContextThemeWrapper(this, R.style.categoryStyle), null, 0);
+            categoryButtonArray[i].setText(categoryNameArray[i]);
+            categoryButtonArray[i].setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, (int) dpToPx(this, 90)));
+            int dp = (int) dpToPx(this, 15);
+            categoryButtonArray[i].setPadding(dp, dp, dp, dp);
+            categoryButtonArray[i].setBackgroundColor(Color.parseColor("#757575"));
+            categoryButtonArray[i].setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    which_category = final_i;
+                    mSpeechRecognizer.startListening(mSpeechRecognizerIntent);
+                }
+            });
+            main_layout.addView(categoryButtonArray[i]);
+
+            recyclerViewArray[i] = new RecyclerView(this);
+            recyclerViewArray[i].setLayoutManager(new LinearLayoutManager(this));
+            recyclerViewArray[i].setNestedScrollingEnabled(false);
+            adapterArray[i] = new NoteAdapter(options);
+            recyclerViewArray[i].setAdapter(adapterArray[i]);
+
+            new ItemTouchHelper(new ItemTouchHelper.SimpleCallback(0,
+                    ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT) {
+                @Override
+                public boolean onMove(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, RecyclerView.ViewHolder target) {
+                    return false;
+                }
+
+                @Override
+                public void onSwiped(final RecyclerView.ViewHolder viewHolder, int direction) {
+
+                    final Note note = adapterArray[final_i].getSnapshots().get(viewHolder.getAdapterPosition());
+
+                    soundPool.play(deleteSound, 0.4F, 0.4F, 0, 0, 1);
+                    adapterArray[final_i].deleteNote(viewHolder.getAdapterPosition());
+                    Snackbar.make(recyclerViewArray[final_i], "Einkaufseintrag gelöscht!", Snackbar.LENGTH_LONG)
+                            .setAction("UNDO", new View.OnClickListener() {
+                                @Override
+                                public void onClick(View view) {
+                                    soundPool.play(undoSound, 0.1F, 0.1F, 0, 0, 1);
+                                    referenceArray[final_i].add(note);
+                                }
+                            }).show();
+                }
+            }).attachToRecyclerView(recyclerViewArray[i]);
+
+            adapterArray[i].setOnItemClickListener(new NoteAdapter.OnItemClickListener() {
+                @Override
+                public void onItemClick(Note note, String id) {
+                    if (note.getNoteColor() == note.NOTE_NO_COLOR) {
+                        soundPool.play(turn_greenSound, 0.07F, 0.07F, 0, 0, 1);
+                        referenceArray[final_i].document(id).update("noteColor", note.NOTE_COLOR_GREEN);
+                    } else {
+                        soundPool.play(turn_greenSound, 0.07F, 0.07F, 0, 0, 1);
+                        referenceArray[final_i].document(id).update("noteColor", note.NOTE_NO_COLOR);
+                    }
+                }
+            });
+
+            adapterArray[i].setOnLongItemClickListener(new NoteAdapter.OnLongItemClickListener() {
+                @Override
+                public void onLongItemClick(Note note, String id) {
+                    if (note.getNoteColor() != note.NOTE_COLOR_YELLOW) {
+                        soundPool.play(turn_orangeSound, 0.2F, 0.2F, 0, 0, 1);
+                        referenceArray[final_i].document(id).update("noteColor", note.NOTE_COLOR_YELLOW);
+                    }
+                }
+            });
+            main_layout.addView(recyclerViewArray[i]);
+        }
+
+        View pufferView = new View(this);
+        pufferView.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, (int) dpToPx(this, 200)));
+        main_layout.addView(pufferView);
+
+        checkPermission();
+
+        /*FloatingActionButton fab_done = findViewById(R.id.fab_shoppingDone);
         fab_done.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -266,7 +280,7 @@ public class MainActivity extends AppCompatActivity {
                         }).show();
             }
         });
-
+*/
     }
 
     @Override
@@ -308,21 +322,24 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onStart() {
         super.onStart();
-        adapter.startListening();
+        for (int i=0; i<categoryNameArray.length; i++)
+        adapterArray[i].startListening();
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        for(int i=1; i<=adapter.getSnapshots().size(); i++){
-            firebaseCollectionReference.document(adapter.getSnapshots().getSnapshot(i-1).getId()).update("adapterPos", adapter.getSnapshots().size()-i);
-        }
+        for (int n=0; n<categoryNameArray.length; n++){
+        for(int i=1; i<=adapterArray[n].getSnapshots().size(); i++){
+            referenceArray[n].document(adapterArray[n].getSnapshots().getSnapshot(i-1).getId()).update("adapterPos", adapterArray[n].getSnapshots().size()-i);
+        }}
     }
 
     @Override
     protected void onStop() {
         super.onStop();
-        adapter.stopListening();
+        for (int i=0; i<categoryNameArray.length; i++)
+        adapterArray[i].stopListening();
     }
 
     void openWhatsappContact(String number) {
@@ -356,12 +373,6 @@ public class MainActivity extends AppCompatActivity {
         super.onDestroy();
         soundPool.release();
         soundPool = null;
-    }
-
-    public static float dpToPx(Context context, float dp) {
-        float density = context.getResources().getDisplayMetrics().density;
-        float pixel = dp * density;
-        return pixel;
     }
 
 }
