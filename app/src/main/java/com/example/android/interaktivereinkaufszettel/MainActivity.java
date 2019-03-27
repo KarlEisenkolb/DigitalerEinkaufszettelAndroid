@@ -27,11 +27,13 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.firebase.ui.firestore.FirestoreRecyclerOptions;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.resources.TextAppearance;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentChange;
+import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreException;
@@ -43,6 +45,8 @@ import com.google.firebase.firestore.core.OrderBy;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+
+import javax.annotation.Nullable;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.view.ContextThemeWrapper;
@@ -149,7 +153,7 @@ public class MainActivity extends AppCompatActivity {
         turn_greenSound = soundPool.load(this, R.raw.turn_green, 1);
         undoSound = soundPool.load(this, R.raw.undo, 1);
 
-        int category_count =6;
+        int category_count =7;
         categoryNameArray = new String[category_count];
         categoryNameArray[0]="Obst und Gemüse";
         categoryNameArray[1]="Fisch und Fleisch";
@@ -157,6 +161,7 @@ public class MainActivity extends AppCompatActivity {
         categoryNameArray[3]="Getränke";
         categoryNameArray[4]="Milch- und Kühlprodukte";
         categoryNameArray[5]="Drogerieprodukte";
+        categoryNameArray[6]="Sonstiges";
 
         adapterArray = new NoteAdapter[category_count];
         referenceArray = new CollectionReference[category_count];
@@ -169,6 +174,13 @@ public class MainActivity extends AppCompatActivity {
 
             referenceArray[i] = firebaseFirestore.collection(categoryNameArray[i]);
 
+            referenceArray[i].addSnapshotListener(new EventListener<QuerySnapshot>() {
+                @Override
+                public void onEvent(@Nullable QuerySnapshot queryDocumentSnapshots, @Nullable FirebaseFirestoreException e) {
+                    adjustRecyclerHeight();
+                }
+            });
+
             FirestoreRecyclerOptions<Note> options = new FirestoreRecyclerOptions.Builder<Note>()
                     .setQuery(referenceArray[i].orderBy("adapterPos", Query.Direction.DESCENDING), Note.class)
                     .build();
@@ -179,11 +191,12 @@ public class MainActivity extends AppCompatActivity {
             int dp = (int) dpToPx(this, 15);
             categoryButtonArray[i].setPadding(dp, dp, dp, dp);
             categoryButtonArray[i].setBackgroundColor(Color.parseColor("#757575"));
-            categoryButtonArray[i].setOnClickListener(new View.OnClickListener() {
+            categoryButtonArray[i].setOnLongClickListener(new View.OnLongClickListener() {
                 @Override
-                public void onClick(View v) {
+                public boolean onLongClick(View v) {
                     which_category = final_i;
                     mSpeechRecognizer.startListening(mSpeechRecognizerIntent);
+                    return true;
                 }
             });
             main_layout.addView(categoryButtonArray[i]);
@@ -191,6 +204,7 @@ public class MainActivity extends AppCompatActivity {
             recyclerViewArray[i] = new RecyclerView(this);
             recyclerViewArray[i].setLayoutManager(new LinearLayoutManager(this));
             recyclerViewArray[i].setNestedScrollingEnabled(false);
+            recyclerViewArray[i].setMinimumHeight((int) dpToPx(this, 1));
             adapterArray[i] = new NoteAdapter(options);
             recyclerViewArray[i].setAdapter(adapterArray[i]);
 
@@ -207,7 +221,12 @@ public class MainActivity extends AppCompatActivity {
                     final Note note = adapterArray[final_i].getSnapshots().get(viewHolder.getAdapterPosition());
 
                     soundPool.play(deleteSound, 0.4F, 0.4F, 0, 0, 1);
-                    adapterArray[final_i].deleteNote(viewHolder.getAdapterPosition());
+                    adapterArray[final_i].getSnapshots().getSnapshot(viewHolder.getAdapterPosition()).getReference().delete().addOnSuccessListener(new OnSuccessListener<Void>() {
+                        @Override
+                        public void onSuccess(Void aVoid) {
+                            reorderFirestore(final_i);
+                        }
+                    });
                     Snackbar.make(recyclerViewArray[final_i], "Einkaufseintrag gelöscht!", Snackbar.LENGTH_LONG)
                             .setAction("UNDO", new View.OnClickListener() {
                                 @Override
@@ -250,37 +269,45 @@ public class MainActivity extends AppCompatActivity {
 
         checkPermission();
 
-        /*FloatingActionButton fab_done = findViewById(R.id.fab_shoppingDone);
+        final FloatingActionButton fab_done = findViewById(R.id.fab_shoppingDone);
         fab_done.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
 
-                final List<Note> notesGreen = new ArrayList();
+                final List<List<Note>> notesGreenOuter = new ArrayList<>();
                 WriteBatch batch = firebaseFirestore.batch();
 
                 soundPool.play(finishSound, 0.2F, 0.2F, 0, 0, 1);
-                for(int i=0; i<adapter.getSnapshots().size(); i++){
-                    if (adapter.getSnapshots().get(i).getNoteColor() == Note.NOTE_COLOR_GREEN) {
-                        batch.delete(firebaseCollectionReference.document(adapter.getSnapshots().getSnapshot(i).getId()));
-                        notesGreen.add(adapter.getSnapshots().get(i));
+                for (int n=0; n<categoryNameArray.length; n++){
+                    List<Note> notesGreenInner = new ArrayList<>();
+                for(int i=0; i<adapterArray[n].getSnapshots().size(); i++){
+                    if (adapterArray[n].getSnapshots().get(i).getNoteColor() == Note.NOTE_COLOR_GREEN) {
+                        batch.delete(referenceArray[n].document(adapterArray[n].getSnapshots().getSnapshot(i).getId()));
+                        notesGreenInner.add(adapterArray[n].getSnapshots().get(i));
                     }
-                }
+                    notesGreenOuter.add(notesGreenInner);
+                }}
 
                 batch.commit();
 
-                Snackbar.make(recyclerView, "Alle Erledigten gelöscht!", Snackbar.LENGTH_LONG)
+                Snackbar.make(fab_done, "Alle Erledigten gelöscht!", Snackbar.LENGTH_LONG)
                         .setAction("UNDO", new View.OnClickListener() {
                             @Override
                             public void onClick(View view) {
                                 soundPool.play(undoSound, 0.1F, 0.1F, 0, 0, 1);
-                                for (Note currentNote : notesGreen){
-                                    firebaseCollectionReference.add(new Note(currentNote.getContent(), currentNote.getAdapterPos(), Note.NOTE_COLOR_GREEN));
-                                }
+                                WriteBatch batch = firebaseFirestore.batch();
+                                int n=0;
+                                int i=0;
+                                for (List<Note> currentGreenInner : notesGreenOuter){
+                                    for(Note currentNote : currentGreenInner){
+                                        batch.set(referenceArray[n].document(adapterArray[n].getSnapshots().getSnapshot(i).getId()) ,new Note(currentNote.getContent(), currentNote.getAdapterPos(), Note.NOTE_COLOR_GREEN));
+                                }}
+                                batch.commit();
                             }
                         }).show();
             }
         });
-*/
+
     }
 
     @Override
@@ -326,13 +353,25 @@ public class MainActivity extends AppCompatActivity {
         adapterArray[i].startListening();
     }
 
+    private void reorderFirestore(int n){
+        WriteBatch batch = firebaseFirestore.batch();
+        //for (int n=0; n<categoryNameArray.length; n++){
+            for(int i=1; i<=adapterArray[n].getSnapshots().size(); i++){
+                batch.update(referenceArray[n].document(adapterArray[n].getSnapshots().getSnapshot(i-1).getId()),"adapterPos", adapterArray[n].getSnapshots().size()-i);
+
+            }//}
+        batch.commit();
+    }
+
+    private void adjustRecyclerHeight(){
+        for (int i=0; i<categoryNameArray.length; i++){
+            recyclerViewArray[i].setMinimumHeight((int) dpToPx(this, 55*adapterArray[i].getSnapshots().size()+2));
+        }
+    }
+
     @Override
     protected void onPause() {
         super.onPause();
-        for (int n=0; n<categoryNameArray.length; n++){
-        for(int i=1; i<=adapterArray[n].getSnapshots().size(); i++){
-            referenceArray[n].document(adapterArray[n].getSnapshots().getSnapshot(i-1).getId()).update("adapterPos", adapterArray[n].getSnapshots().size()-i);
-        }}
     }
 
     @Override
