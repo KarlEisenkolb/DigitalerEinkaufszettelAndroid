@@ -4,14 +4,27 @@
     tools:context="com.example.android.interaktivereinkaufszettel.MainActivity">
 
     <item
+        android:id="@+id/item_counter"
+        app:showAsAction="always"
+        android:title="itemCounter"/>
+    <item
+        android:id="@+id/progress"
+        app:showAsAction="always"
+        android:title="progress"/>
+    <item
         android:id="@+id/messageWhatsApp"
-        android:title="@string/action_settings"
-        app:showAsAction="ifRoom"
+        android:title="NACHRICHT"
+        app:showAsAction="always"
         android:icon="@drawable/mail"/>
 
     <item
-        android:id="@+id/action_settings"
-        android:orderInCategory="100"
-        android:title="@string/action_settings"
-        app:showAsAction="never" />
+        android:id="@+id/laden"
+        android:title="LADEN"
+        app:showAsAction="always"
+        android:icon="@drawable/load"/>
+    <item
+        android:id="@+id/speichern"
+        android:title="SPEICHERN"
+        app:showAsAction="always"
+        android:icon="@drawable/save"/>
 </menu>

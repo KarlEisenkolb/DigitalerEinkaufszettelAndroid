@@ -1,5 +1,6 @@
 package com.example.android.interaktivereinkaufszettel;
 
+import android.content.Context;
 import android.graphics.Color;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -11,47 +12,61 @@ import android.widget.TextView;
 import com.firebase.ui.firestore.FirestoreRecyclerAdapter;
 import com.firebase.ui.firestore.FirestoreRecyclerOptions;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
-public class NoteAdapter extends FirestoreRecyclerAdapter<Note, NoteAdapter.NoteHolder> {
+public class NoteAdapter extends FirestoreRecyclerAdapter<Note, RecyclerView.ViewHolder> {
 
     private OnItemClickListener listenerShort;
     private OnLongItemClickListener listenerLong;
+    private final LayoutInflater inflater;
 
-    public NoteAdapter(@NonNull FirestoreRecyclerOptions<Note> options) {
+    public NoteAdapter(@NonNull FirestoreRecyclerOptions<Note> options, Context ctx) {
         super(options);
+        this.inflater = LayoutInflater.from(ctx);
     }
 
     @NonNull
     @Override
-    public NoteHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View itemView = LayoutInflater.from(parent.getContext())
-                .inflate(R.layout.note_item, parent, false);
-        return new NoteHolder(itemView);
+    public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        if (viewType == Note.NOTE) {
+            View itemView = inflater.inflate(R.layout.note_item, parent, false);
+            return new NoteHolder(itemView);
+        } else {
+            View itemView = inflater.inflate(R.layout.note_category_title, parent, false);
+            return new CategoryHolder(itemView);
+        }
     }
 
     @Override
-    public void onBindViewHolder(@NonNull NoteHolder holder, int position, @NonNull Note note) {
-        holder.textViewContent.setText(note.getContent());
+    public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position, @NonNull Note note) {
+        if (holder instanceof NoteHolder) {
+            ((NoteHolder) holder).textViewContent.setText(note.getContent());
 
-        if (note.getNoteColor() == Note.NOTE_COLOR_GREEN){
-            holder.itemViewId.setBackgroundColor(Color.parseColor("#388E3C"));
-            Log.d("onBind ", "Green");}
-        else if (note.getNoteColor() == Note.NOTE_COLOR_YELLOW){
-            holder.itemViewId.setBackgroundColor(Color.parseColor("#FF8F00"));
-            Log.d("onBind ", "Yellow");}
-        else{
-            holder.itemViewId.setBackgroundColor(Color.parseColor("#E0E0E0"));
-            Log.d("onBind ", "Gray");}
+            if (note.getNoteColor() == Note.NOTE_COLOR_GREEN) {
+                ((NoteHolder) holder).itemViewId.setBackgroundColor(Color.parseColor("#388E3C"));
+                Log.d("onBind ", "Green");
+            } else if (note.getNoteColor() == Note.NOTE_COLOR_YELLOW) {
+                ((NoteHolder) holder).itemViewId.setBackgroundColor(Color.parseColor("#FF8F00"));
+                Log.d("onBind ", "Yellow");
+            } else {
+                ((NoteHolder) holder).itemViewId.setBackgroundColor(Color.parseColor("#FFFFFF")); //#E0E0E0
+                Log.d("onBind ", "Gray");
+            }
+        } else {
+            ((CategoryHolder) holder).textViewContent.setText(note.getContent());
 
-    }
-
-    public void deleteNote(int position) {
-        getSnapshots().getSnapshot(position).getReference().delete();
+            if (note.getNoteColor() == Note.NOTE_COLOR_GREEN) {
+                ((CategoryHolder) holder).itemViewId.setBackgroundColor(Color.parseColor("#388E3C"));
+                Log.d("onBind ", "Green");
+            } else if (note.getNoteColor() == Note.NOTE_COLOR_YELLOW) {
+                ((CategoryHolder) holder).itemViewId.setBackgroundColor(Color.parseColor("#FF8F00"));
+                Log.d("onBind ", "Yellow");
+            } else {
+                ((CategoryHolder) holder).itemViewId.setBackgroundColor(Color.parseColor("#757575")); //#E0E0E0
+                Log.d("onBind ", "Gray");
+            }
+        }
     }
 
     class NoteHolder extends RecyclerView.ViewHolder {
@@ -73,7 +88,7 @@ public class NoteAdapter extends FirestoreRecyclerAdapter<Note, NoteAdapter.Note
                 }
             });
 
-            itemView.setOnLongClickListener(new View.OnLongClickListener(){
+            itemView.setOnLongClickListener(new View.OnLongClickListener() {
                 @Override
                 public boolean onLongClick(View v) {
                     int position = getAdapterPosition();
@@ -84,6 +99,53 @@ public class NoteAdapter extends FirestoreRecyclerAdapter<Note, NoteAdapter.Note
                 }
             });
         }
+    }
+
+    class CategoryHolder extends RecyclerView.ViewHolder {
+        private TextView textViewContent;
+        private RelativeLayout itemViewId;
+
+        public CategoryHolder(View itemView) {
+            super(itemView);
+            textViewContent = itemView.findViewById(R.id.text_view_title);
+            itemViewId = itemView.findViewById(R.id.title_color);
+
+            itemView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    int position = getAdapterPosition();
+                    if (listenerShort != null && position != RecyclerView.NO_POSITION) {
+                        listenerShort.onItemClick(getSnapshots().get(position), getSnapshots().getSnapshot(position).getId());
+                    }
+                }
+            });
+
+            itemView.setOnLongClickListener(new View.OnLongClickListener() {
+                @Override
+                public boolean onLongClick(View v) {
+                    int position = getAdapterPosition();
+                    if (listenerLong != null && position != RecyclerView.NO_POSITION) {
+                        listenerLong.onLongItemClick(getSnapshots().get(position), getSnapshots().getSnapshot(position).getId());
+                    }
+                    return true;
+                }
+            });
+        }
+    }
+
+    @Override
+    public int getItemCount() {
+        return super.getItemCount();
+    }
+
+    @Override
+    public long getItemId(int position) {
+        return super.getItemId(position);
+    }
+
+    @Override
+    public int getItemViewType(int position) {
+        return (int) getSnapshots().get(position).getType();
     }
 
     public interface OnItemClickListener {

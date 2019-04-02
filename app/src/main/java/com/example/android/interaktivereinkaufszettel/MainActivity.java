@@ -4,12 +4,10 @@ import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.graphics.Color;
 import android.media.AudioAttributes;
 import android.media.AudioManager;
 import android.media.SoundPool;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
@@ -21,35 +19,30 @@ import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
-import android.widget.Button;
-import android.widget.LinearLayout;
-import android.widget.TextView;
 
 import com.firebase.ui.firestore.FirestoreRecyclerOptions;
+import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import com.google.android.material.resources.TextAppearance;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.firestore.CollectionReference;
-import com.google.firebase.firestore.DocumentChange;
-import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreException;
 import com.google.firebase.firestore.Query;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.firestore.WriteBatch;
-import com.google.firebase.firestore.core.OrderBy;
 
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
-import javax.annotation.Nullable;
-
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.view.ContextThemeWrapper;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.ItemTouchHelper;
@@ -57,16 +50,18 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 public class MainActivity extends AppCompatActivity {
-    static int which_category=0;
+    static String which_category = "default";
     private AudioManager audio;
     private SoundPool soundPool;
     private int deleteSound, finishSound, turn_orangeSound, turn_greenSound, undoSound;
     private FirebaseFirestore firebaseFirestore = FirebaseFirestore.getInstance();
     private String[] categoryNameArray;
-    private NoteAdapter[] adapterArray;
-    private CollectionReference[] referenceArray;
-    private Button[] categoryButtonArray;
-    private RecyclerView[] recyclerViewArray;
+    private CollectionReference collectionReference;
+    private CollectionReference collectionSaveReference;
+    private RecyclerView recyclerView;
+    private NoteAdapter adapter;
+    private Menu menu;
+    private FloatingActionButton fab_done;
 
     public static float dpToPx(Context context, float dp) {
         float density = context.getResources().getDisplayMetrics().density;
@@ -122,9 +117,18 @@ public class MainActivity extends AppCompatActivity {
                 ArrayList<String> matches = bundle
                         .getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
 
+                int pos;
+                if (numberOfItemsInCategory(which_category) == 0) {
+                    pos = 0;
+                } else {
+                    pos = (adapterPosOfHighestItemInCategory(which_category).charAt(1) - '0') + 1;
+                }
+
+
+                Log.d("onResults", "test: " + pos);
                 //displaying the first match
                 if (matches != null)
-                    referenceArray[which_category].add(new Note(matches.get(0), adapterArray[which_category].getSnapshots().size()));
+                    collectionReference.add(new Note(matches.get(0), which_category + String.valueOf(pos)));
             }
 
             @Override
@@ -153,142 +157,152 @@ public class MainActivity extends AppCompatActivity {
         turn_greenSound = soundPool.load(this, R.raw.turn_green, 1);
         undoSound = soundPool.load(this, R.raw.undo, 1);
 
-        int category_count =7;
+        final int category_count = 7;
         categoryNameArray = new String[category_count];
-        categoryNameArray[0]="Obst und Gemüse";
-        categoryNameArray[1]="Fisch und Fleisch";
-        categoryNameArray[2]="Verpackte Produkte";
-        categoryNameArray[3]="Getränke";
-        categoryNameArray[4]="Milch- und Kühlprodukte";
-        categoryNameArray[5]="Drogerieprodukte";
-        categoryNameArray[6]="Sonstiges";
 
-        adapterArray = new NoteAdapter[category_count];
-        referenceArray = new CollectionReference[category_count];
-        categoryButtonArray = new Button[category_count];
-        recyclerViewArray = new RecyclerView[category_count];
+        categoryNameArray[0] = "Sonstiges";
+        categoryNameArray[1] = "Drogerieprodukte";
+        categoryNameArray[2] = "Milch- und Kühlprodukte";
+        categoryNameArray[3] = "Getränke";
+        categoryNameArray[4] = "Fisch und Fleisch";
+        categoryNameArray[5] = "Verpackte Produkte";
+        categoryNameArray[6] = "Obst und Gemüse";
 
-        LinearLayout main_layout = findViewById(R.id.main_layout);
-        for (int i=0; i<categoryNameArray.length; i++) {
-            final int final_i = i;
+        WriteBatch batch = firebaseFirestore.batch();
+        collectionReference = firebaseFirestore.collection("Einkaufszettel");
+        collectionSaveReference = firebaseFirestore.collection("SaveEinkaufszettel");
+        int i = 0;
+        for (String currentTitle : categoryNameArray) {
+            batch.set(collectionReference.document(categoryNameArray[i]), new Note(currentTitle, categoryPosition(i), Note.NOTE_NO_COLOR, Note.CATEGORY));
+            i++;
+        }
+        batch.commit();
 
-            referenceArray[i] = firebaseFirestore.collection(categoryNameArray[i]);
-
-            referenceArray[i].addSnapshotListener(new EventListener<QuerySnapshot>() {
-                @Override
-                public void onEvent(@Nullable QuerySnapshot queryDocumentSnapshots, @Nullable FirebaseFirestoreException e) {
-                    adjustRecyclerHeight();
-                }
-            });
-
-            FirestoreRecyclerOptions<Note> options = new FirestoreRecyclerOptions.Builder<Note>()
-                    .setQuery(referenceArray[i].orderBy("adapterPos", Query.Direction.DESCENDING), Note.class)
-                    .build();
-
-            categoryButtonArray[i] = new Button(new ContextThemeWrapper(this, R.style.categoryStyle), null, 0);
-            categoryButtonArray[i].setText(categoryNameArray[i]);
-            categoryButtonArray[i].setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, (int) dpToPx(this, 90)));
-            int dp = (int) dpToPx(this, 15);
-            categoryButtonArray[i].setPadding(dp, dp, dp, dp);
-            categoryButtonArray[i].setBackgroundColor(Color.parseColor("#757575"));
-            categoryButtonArray[i].setOnLongClickListener(new View.OnLongClickListener() {
-                @Override
-                public boolean onLongClick(View v) {
-                    which_category = final_i;
-                    mSpeechRecognizer.startListening(mSpeechRecognizerIntent);
-                    return true;
-                }
-            });
-            main_layout.addView(categoryButtonArray[i]);
-
-            recyclerViewArray[i] = new RecyclerView(this);
-            recyclerViewArray[i].setLayoutManager(new LinearLayoutManager(this));
-            recyclerViewArray[i].setNestedScrollingEnabled(false);
-            recyclerViewArray[i].setMinimumHeight((int) dpToPx(this, 1));
-            adapterArray[i] = new NoteAdapter(options);
-            recyclerViewArray[i].setAdapter(adapterArray[i]);
-
-            new ItemTouchHelper(new ItemTouchHelper.SimpleCallback(0,
-                    ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT) {
-                @Override
-                public boolean onMove(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, RecyclerView.ViewHolder target) {
-                    return false;
+        collectionReference.addSnapshotListener(new EventListener<QuerySnapshot>() {
+            @Override
+            public void onEvent(@Nullable QuerySnapshot queryDocumentSnapshots, @Nullable FirebaseFirestoreException e) {
+                if (e != null) {
+                    Log.w("TAG", "Listen failed.", e);
+                    return;
                 }
 
-                @Override
-                public void onSwiped(final RecyclerView.ViewHolder viewHolder, int direction) {
+                int green_counter = 0;
+                int size = queryDocumentSnapshots.size() - category_count;
 
-                    final Note note = adapterArray[final_i].getSnapshots().get(viewHolder.getAdapterPosition());
-
-                    soundPool.play(deleteSound, 0.4F, 0.4F, 0, 0, 1);
-                    adapterArray[final_i].getSnapshots().getSnapshot(viewHolder.getAdapterPosition()).getReference().delete().addOnSuccessListener(new OnSuccessListener<Void>() {
-                        @Override
-                        public void onSuccess(Void aVoid) {
-                            reorderFirestore(final_i);
-                        }
-                    });
-                    Snackbar.make(recyclerViewArray[final_i], "Einkaufseintrag gelöscht!", Snackbar.LENGTH_LONG)
-                            .setAction("UNDO", new View.OnClickListener() {
-                                @Override
-                                public void onClick(View view) {
-                                    soundPool.play(undoSound, 0.1F, 0.1F, 0, 0, 1);
-                                    referenceArray[final_i].add(note);
-                                }
-                            }).show();
+                for (QueryDocumentSnapshot doc : queryDocumentSnapshots) {
+                    if (doc.getLong("noteColor") == Note.NOTE_COLOR_GREEN) {
+                        green_counter++;
+                    }
                 }
-            }).attachToRecyclerView(recyclerViewArray[i]);
 
-            adapterArray[i].setOnItemClickListener(new NoteAdapter.OnItemClickListener() {
-                @Override
-                public void onItemClick(Note note, String id) {
+                MenuItem item_counter = menu.findItem(R.id.item_counter);
+                MenuItem progress = menu.findItem(R.id.progress);
+
+                DecimalFormat format = new DecimalFormat("##0.##");
+                item_counter.setTitle(green_counter + "/" + size);
+                if (size == 0)
+                    progress.setTitle("0%");
+                else
+                    progress.setTitle(format.format(((double) green_counter / (double) size) * 100) + "%");
+            }
+        });
+
+        FirestoreRecyclerOptions<Note> options = new FirestoreRecyclerOptions.Builder<Note>()
+                .setQuery(collectionReference.orderBy("adapterPos", Query.Direction.DESCENDING), Note.class)
+                .build();
+
+        recyclerView = findViewById(R.id.recycler_view);
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        recyclerView.setNestedScrollingEnabled(false);
+        adapter = new NoteAdapter(options, this);
+        recyclerView.setAdapter(adapter);
+
+        new ItemTouchHelper(new ItemTouchHelper.SimpleCallback(0,
+                ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT) {
+            @Override
+            public boolean onMove(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, RecyclerView.ViewHolder target) {
+                return false;
+            }
+
+            @Override
+            public int getSwipeDirs(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder) {
+                if (viewHolder instanceof NoteAdapter.CategoryHolder) return 0;
+                return super.getSwipeDirs(recyclerView, viewHolder);
+            }
+
+            @Override
+            public void onSwiped(final RecyclerView.ViewHolder viewHolder, int direction) {
+
+                final Note note = adapter.getSnapshots().get(viewHolder.getAdapterPosition());
+
+                soundPool.play(deleteSound, 0.4F, 0.4F, 0, 0, 1);
+                adapter.getSnapshots().getSnapshot(viewHolder.getAdapterPosition()).getReference().delete().addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void aVoid) {
+                        //reorderFirestoreCategory();
+                    }
+                });
+                Snackbar.make(recyclerView, "Einkaufseintrag gelöscht!", Snackbar.LENGTH_LONG)
+                        .setAction("UNDO", new View.OnClickListener() {
+                            @Override
+                            public void onClick(View view) {
+                                soundPool.play(undoSound, 0.1F, 0.1F, 0, 0, 1);
+                                collectionReference.add(note);
+                            }
+                        }).show();
+            }
+        }).attachToRecyclerView(recyclerView);
+
+        adapter.setOnItemClickListener(new NoteAdapter.OnItemClickListener() {
+            @Override
+            public void onItemClick(Note note, String id) {
+                if (note.getType() == Note.NOTE) {
                     if (note.getNoteColor() == note.NOTE_NO_COLOR) {
                         soundPool.play(turn_greenSound, 0.07F, 0.07F, 0, 0, 1);
-                        referenceArray[final_i].document(id).update("noteColor", note.NOTE_COLOR_GREEN);
+                        collectionReference.document(id).update("noteColor", note.NOTE_COLOR_GREEN);
                     } else {
                         soundPool.play(turn_greenSound, 0.07F, 0.07F, 0, 0, 1);
-                        referenceArray[final_i].document(id).update("noteColor", note.NOTE_NO_COLOR);
+                        collectionReference.document(id).update("noteColor", note.NOTE_NO_COLOR);
                     }
                 }
-            });
+            }
+        });
 
-            adapterArray[i].setOnLongItemClickListener(new NoteAdapter.OnLongItemClickListener() {
-                @Override
-                public void onLongItemClick(Note note, String id) {
+        adapter.setOnLongItemClickListener(new NoteAdapter.OnLongItemClickListener() {
+            @Override
+            public void onLongItemClick(Note note, String id) {
+                if (note.getType() == Note.NOTE) {
                     if (note.getNoteColor() != note.NOTE_COLOR_YELLOW) {
                         soundPool.play(turn_orangeSound, 0.2F, 0.2F, 0, 0, 1);
-                        referenceArray[final_i].document(id).update("noteColor", note.NOTE_COLOR_YELLOW);
+                        collectionReference.document(id).update("noteColor", note.NOTE_COLOR_YELLOW);
                     }
+                } else {
+                    which_category = String.valueOf(note.getAdapterPos().charAt(0));
+                    mSpeechRecognizer.startListening(mSpeechRecognizerIntent);
                 }
-            });
-            main_layout.addView(recyclerViewArray[i]);
-        }
-
-        View pufferView = new View(this);
-        pufferView.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, (int) dpToPx(this, 200)));
-        main_layout.addView(pufferView);
+            }
+        });
 
         checkPermission();
 
-        final FloatingActionButton fab_done = findViewById(R.id.fab_shoppingDone);
+        fab_done = findViewById(R.id.fab_shoppingDone);
         fab_done.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
 
-                final List<List<Note>> notesGreenOuter = new ArrayList<>();
+                final List<Note> notesGreen = new ArrayList<>();
                 WriteBatch batch = firebaseFirestore.batch();
 
                 soundPool.play(finishSound, 0.2F, 0.2F, 0, 0, 1);
-                for (int n=0; n<categoryNameArray.length; n++){
-                    List<Note> notesGreenInner = new ArrayList<>();
-                for(int i=0; i<adapterArray[n].getSnapshots().size(); i++){
-                    if (adapterArray[n].getSnapshots().get(i).getNoteColor() == Note.NOTE_COLOR_GREEN) {
-                        batch.delete(referenceArray[n].document(adapterArray[n].getSnapshots().getSnapshot(i).getId()));
-                        notesGreenInner.add(adapterArray[n].getSnapshots().get(i));
-                    }
-                    notesGreenOuter.add(notesGreenInner);
-                }}
 
+                for (int i = 0; i < adapter.getSnapshots().size(); i++) {
+                    if (adapter.getSnapshots().get(i).getNoteColor() == Note.NOTE_COLOR_GREEN) {
+                        batch.delete(collectionReference.document(adapter.getSnapshots().getSnapshot(i).getId()));
+                        notesGreen.add(adapter.getSnapshots().get(i));
+                    }
+                }
                 batch.commit();
+
 
                 Snackbar.make(fab_done, "Alle Erledigten gelöscht!", Snackbar.LENGTH_LONG)
                         .setAction("UNDO", new View.OnClickListener() {
@@ -296,12 +310,8 @@ public class MainActivity extends AppCompatActivity {
                             public void onClick(View view) {
                                 soundPool.play(undoSound, 0.1F, 0.1F, 0, 0, 1);
                                 WriteBatch batch = firebaseFirestore.batch();
-                                int n=0;
-                                int i=0;
-                                for (List<Note> currentGreenInner : notesGreenOuter){
-                                    for(Note currentNote : currentGreenInner){
-                                        batch.set(referenceArray[n].document(adapterArray[n].getSnapshots().getSnapshot(i).getId()) ,new Note(currentNote.getContent(), currentNote.getAdapterPos(), Note.NOTE_COLOR_GREEN));
-                                }}
+                                for (Note note : notesGreen)
+                                    batch.set(collectionReference.document(), note);
                                 batch.commit();
                             }
                         }).show();
@@ -314,6 +324,7 @@ public class MainActivity extends AppCompatActivity {
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_main, menu);
+        this.menu = menu;
         return true;
     }
 
@@ -325,8 +336,56 @@ public class MainActivity extends AppCompatActivity {
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
+        if (id == R.id.speichern) {
+            Snackbar.make(fab_done, "Speichern", Snackbar.LENGTH_LONG).setAction("BESTÄTIGEN", new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    soundPool.play(undoSound, 0.1F, 0.1F, 0, 0, 1);
+                    collectionSaveReference.get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                        @Override
+                        public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                            if (task.isSuccessful()) {
+                                WriteBatch batch = firebaseFirestore.batch();
+                                for (QueryDocumentSnapshot document : task.getResult()) {
+                                    batch.delete(collectionSaveReference.document(document.getId()));
+                                }
+                                for (Note note : adapter.getSnapshots()) {
+                                    if (note.getType() == Note.NOTE)
+                                        batch.set(collectionSaveReference.document(), note);
+                                }
+                                batch.commit();
+                            }
+                        }
+                    });
+                }
+            }).show();
             return true;
+        }
+        if (id == R.id.laden) {
+            Snackbar.make(fab_done, "Laden", Snackbar.LENGTH_LONG).setAction("BESTÄTIGEN", new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    soundPool.play(undoSound, 0.1F, 0.1F, 0, 0, 1);
+                    collectionSaveReference.get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                        @Override
+                        public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                            collectionSaveReference.get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                                @Override
+                                public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                                    if (task.isSuccessful()) {
+                                        WriteBatch batch = firebaseFirestore.batch();
+                                        for (QueryDocumentSnapshot document : task.getResult()) {
+                                            batch.set(collectionReference.document(), document.toObject(Note.class));
+                                        }
+                                        batch.commit();
+                                    }
+                                }
+                            });
+                        }
+                    });
+                }
+            }).show();
+
         }
         if (id == R.id.messageWhatsApp) {
             openWhatsappContact("4915738975901");
@@ -349,36 +408,40 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onStart() {
         super.onStart();
-        for (int i=0; i<categoryNameArray.length; i++)
-        adapterArray[i].startListening();
+        adapter.startListening();
     }
 
-    private void reorderFirestore(int n){
+    private void reorderFirestoreCategory() {
         WriteBatch batch = firebaseFirestore.batch();
-        //for (int n=0; n<categoryNameArray.length; n++){
-            for(int i=1; i<=adapterArray[n].getSnapshots().size(); i++){
-                batch.update(referenceArray[n].document(adapterArray[n].getSnapshots().getSnapshot(i-1).getId()),"adapterPos", adapterArray[n].getSnapshots().size()-i);
+        String category = "";
+        int categorySize = 0;
+        int n = 0;
 
-            }//}
+        for (int i = 0; i < adapter.getSnapshots().size(); i++) {
+            if (adapter.getSnapshots().get(i).getType() == Note.CATEGORY) {
+                category = String.valueOf(adapter.getSnapshots().get(i).getAdapterPos().charAt(0));
+                categorySize = numberOfItemsInCategory(category);
+                n = 0;
+            } else {
+                batch.update(collectionReference.document(adapter.getSnapshots().getSnapshot(i).getId()), "adapterPos", category + String.valueOf(categorySize - 1 - n));
+                n++;
+            }
+        }
         batch.commit();
     }
 
-    private void adjustRecyclerHeight(){
-        for (int i=0; i<categoryNameArray.length; i++){
-            recyclerViewArray[i].setMinimumHeight((int) dpToPx(this, 55*adapterArray[i].getSnapshots().size()+2));
-        }
-    }
 
     @Override
     protected void onPause() {
         super.onPause();
+        reorderFirestoreCategory();
     }
 
     @Override
     protected void onStop() {
         super.onStop();
-        for (int i=0; i<categoryNameArray.length; i++)
-        adapterArray[i].stopListening();
+        reorderFirestoreCategory();
+        adapter.stopListening();
     }
 
     void openWhatsappContact(String number) {
@@ -410,8 +473,71 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        reorderFirestoreCategory();
         soundPool.release();
         soundPool = null;
     }
 
+    private String categoryPosition(int pos) {
+
+        switch (pos) {
+            case 0:
+                return "AA";
+            case 1:
+                return "BB";
+            case 2:
+                return "CC";
+            case 3:
+                return "DD";
+            case 4:
+                return "EE";
+            case 5:
+                return "FF";
+            case 6:
+                return "GG";
+            case 7:
+                return "HH";
+            case 8:
+                return "II";
+            case 9:
+                return "JJ";
+            case 10:
+                return "KK";
+            case 11:
+                return "LL";
+            case 12:
+                return "MM";
+            case 13:
+                return "NN";
+            default:
+                return null;
+        }
+
+    }
+
+    private int numberOfItemsInCategory(String category) {
+        int count = -1;
+        for (Note note : adapter.getSnapshots()) {
+            if (String.valueOf(note.getAdapterPos().charAt(0)).equals(category))
+                count++;
+        }
+        return count;
+    }
+
+    private String adapterPosOfHighestItemInCategory(String category) {
+        int count = 0;
+        String adapterPos = "";
+
+        for (Note note : adapter.getSnapshots()) {
+            if (String.valueOf(note.getAdapterPos().charAt(0)).equals(category)) {
+                adapterPos = note.getAdapterPos();
+                count++;
+            }
+            if (count == 2) break;
+        }
+        if (count == 1)
+            adapterPos = "00";
+        Log.d("onResults", "adapterPos: " + adapterPos);
+        return adapterPos;
+    }
 }
