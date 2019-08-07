@@ -63,12 +63,6 @@ public class MainActivity extends AppCompatActivity {
     private Menu menu;
     private FloatingActionButton fab_done;
 
-    public static float dpToPx(Context context, float dp) {
-        float density = context.getResources().getDisplayMetrics().density;
-        float pixel = dp * density;
-        return pixel;
-    }
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
@@ -250,8 +244,8 @@ public class MainActivity extends AppCompatActivity {
                                 collectionReference.add(note);
                             }
                         }).show();
-            }
-        }).attachToRecyclerView(recyclerView);
+                }
+            }).attachToRecyclerView(recyclerView);
 
         adapter.setOnItemClickListener(new NoteAdapter.OnItemClickListener() {
             @Override
@@ -397,10 +391,11 @@ public class MainActivity extends AppCompatActivity {
     private void checkPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             if (!(ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED)) {
-                Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
-                        Uri.parse("package:" + getPackageName()));
-                startActivity(intent);
-                finish();
+                this.requestPermissions(
+                        new String[]{
+                                Manifest.permission.RECORD_AUDIO
+                        },
+                        1);
             }
         }
     }
@@ -466,7 +461,7 @@ public class MainActivity extends AppCompatActivity {
                         AudioManager.ADJUST_LOWER, AudioManager.FLAG_SHOW_UI);
                 return true;
             default:
-                return false;
+                return super.onKeyDown(keyCode, event);
         }
     }
 

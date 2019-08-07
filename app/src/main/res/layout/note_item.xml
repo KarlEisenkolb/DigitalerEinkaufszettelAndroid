@@ -15,8 +15,8 @@
             android:layout_height="match_parent"
             android:ellipsize="end"
             android:maxLines="1"
-            android:paddingLeft="15dp"
             android:paddingTop="10dp"
+            android:paddingLeft="15dp"
             android:text="5 Tomaten"
             android:textAppearance="@style/TextAppearance.AppCompat.Large" />
     </RelativeLayout>
