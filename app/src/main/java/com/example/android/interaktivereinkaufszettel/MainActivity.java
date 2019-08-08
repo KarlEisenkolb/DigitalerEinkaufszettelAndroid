@@ -73,7 +73,6 @@ public class MainActivity extends AppCompatActivity {
 
         final SpeechRecognizer mSpeechRecognizer = SpeechRecognizer.createSpeechRecognizer(this);
 
-
         final Intent mSpeechRecognizerIntent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
         mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL,
                 RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
@@ -111,18 +110,12 @@ public class MainActivity extends AppCompatActivity {
                 ArrayList<String> matches = bundle
                         .getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
 
-                int pos;
-                if (numberOfItemsInCategory(which_category) == 0) {
-                    pos = 0;
-                } else {
-                    pos = (adapterPosOfHighestItemInCategory(which_category).charAt(1) - '0') + 1;
-                }
-
+                long pos = System.currentTimeMillis();
 
                 Log.d("onResults", "test: " + pos);
                 //displaying the first match
                 if (matches != null)
-                    collectionReference.add(new Note(matches.get(0), which_category + String.valueOf(pos)));
+                    collectionReference.add(new Note(matches.get(0), which_category + pos));
             }
 
             @Override
@@ -151,6 +144,7 @@ public class MainActivity extends AppCompatActivity {
         turn_greenSound = soundPool.load(this, R.raw.turn_green, 1);
         undoSound = soundPool.load(this, R.raw.undo, 1);
 
+        //Hardcoded Kategorien festlegen
         final int category_count = 7;
         categoryNameArray = new String[category_count];
 
@@ -230,12 +224,7 @@ public class MainActivity extends AppCompatActivity {
                 final Note note = adapter.getSnapshots().get(viewHolder.getAdapterPosition());
 
                 soundPool.play(deleteSound, 0.4F, 0.4F, 0, 0, 1);
-                adapter.getSnapshots().getSnapshot(viewHolder.getAdapterPosition()).getReference().delete().addOnSuccessListener(new OnSuccessListener<Void>() {
-                    @Override
-                    public void onSuccess(Void aVoid) {
-                        //reorderFirestoreCategory();
-                    }
-                });
+                adapter.getSnapshots().getSnapshot(viewHolder.getAdapterPosition()).getReference().delete();
                 Snackbar.make(recyclerView, "Einkaufseintrag gelöscht!", Snackbar.LENGTH_LONG)
                         .setAction("UNDO", new View.OnClickListener() {
                             @Override
@@ -406,36 +395,14 @@ public class MainActivity extends AppCompatActivity {
         adapter.startListening();
     }
 
-    private void reorderFirestoreCategory() {
-        WriteBatch batch = firebaseFirestore.batch();
-        String category = "";
-        int categorySize = 0;
-        int n = 0;
-
-        for (int i = 0; i < adapter.getSnapshots().size(); i++) {
-            if (adapter.getSnapshots().get(i).getType() == Note.CATEGORY) {
-                category = String.valueOf(adapter.getSnapshots().get(i).getAdapterPos().charAt(0));
-                categorySize = numberOfItemsInCategory(category);
-                n = 0;
-            } else {
-                batch.update(collectionReference.document(adapter.getSnapshots().getSnapshot(i).getId()), "adapterPos", category + String.valueOf(categorySize - 1 - n));
-                n++;
-            }
-        }
-        batch.commit();
-    }
-
-
     @Override
     protected void onPause() {
         super.onPause();
-        reorderFirestoreCategory();
     }
 
     @Override
     protected void onStop() {
         super.onStop();
-        reorderFirestoreCategory();
         adapter.stopListening();
     }
 
@@ -468,7 +435,6 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        reorderFirestoreCategory();
         soundPool.release();
         soundPool = null;
     }
@@ -519,20 +485,5 @@ public class MainActivity extends AppCompatActivity {
         return count;
     }
 
-    private String adapterPosOfHighestItemInCategory(String category) {
-        int count = 0;
-        String adapterPos = "";
 
-        for (Note note : adapter.getSnapshots()) {
-            if (String.valueOf(note.getAdapterPos().charAt(0)).equals(category)) {
-                adapterPos = note.getAdapterPos();
-                count++;
-            }
-            if (count == 2) break;
-        }
-        if (count == 1)
-            adapterPos = "00";
-        Log.d("onResults", "adapterPos: " + adapterPos);
-        return adapterPos;
-    }
 }
