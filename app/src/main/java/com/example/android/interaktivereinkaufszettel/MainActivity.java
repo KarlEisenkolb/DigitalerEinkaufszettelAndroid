@@ -1,31 +1,25 @@
 package com.example.android.interaktivereinkaufszettel;
 
-import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.media.AudioAttributes;
 import android.media.AudioManager;
 import android.media.SoundPool;
-import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
-import android.provider.Settings;
-import android.speech.RecognitionListener;
-import android.speech.RecognizerIntent;
-import android.speech.SpeechRecognizer;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 
+import com.firebase.ui.auth.IdpResponse;
 import com.firebase.ui.firestore.FirestoreRecyclerOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -38,19 +32,23 @@ import com.google.firebase.firestore.WriteBatch;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
-import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 public class MainActivity extends AppCompatActivity {
+
+    final static String FIRESTORE_EINKAUFSZETTEL_COLLECTION = "Einkaufszettel";
+    final static String FIRESTORE_SAVE_EINKAUFSZETTEL_COLLECTION = "SaveEinkaufszettel";
+    final static int RC_SIGN_IN = 0;
+
     static String which_category = "default";
+    private CustomFirebaseSecurityHandling securityHandling;
     private AudioManager audio;
     private SoundPool soundPool;
     private int deleteSound, finishSound, turn_orangeSound, turn_greenSound, undoSound;
@@ -65,67 +63,16 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        final SpeechRecognizer mSpeechRecognizer = SpeechRecognizer.createSpeechRecognizer(this);
+        Crypt crypt = new Crypt();
 
-        final Intent mSpeechRecognizerIntent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
-        mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL,
-                RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
-        mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE,
-                Locale.getDefault());
+        securityHandling = new CustomFirebaseSecurityHandling(this);
 
-        mSpeechRecognizer.setRecognitionListener(new RecognitionListener() {
-            @Override
-            public void onReadyForSpeech(Bundle params) {
-            }
-
-            @Override
-            public void onBeginningOfSpeech() {
-            }
-
-            @Override
-            public void onRmsChanged(float rmsdB) {
-            }
-
-            @Override
-            public void onBufferReceived(byte[] buffer) {
-            }
-
-            @Override
-            public void onEndOfSpeech() {
-            }
-
-            @Override
-            public void onError(int error) {
-            }
-
-            @Override
-            public void onResults(Bundle bundle) {
-                //getting all the matches
-                ArrayList<String> matches = bundle
-                        .getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
-
-                long pos = System.currentTimeMillis();
-
-                Log.d("onResults", "test: " + pos);
-                //displaying the first match
-                if (matches != null)
-                    collectionReference.add(new Note(matches.get(0), which_category + pos));
-            }
-
-            @Override
-            public void onPartialResults(Bundle bundle) {
-            }
-
-            @Override
-            public void onEvent(int i, Bundle bundle) {
-            }
-        });
+        final CustomSpeechRecognition customSpeechRecognition = new CustomSpeechRecognition(this);
 
         audio = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
         AudioAttributes audioAttributes = new AudioAttributes.Builder()
@@ -157,8 +104,8 @@ public class MainActivity extends AppCompatActivity {
         categoryNameArray[6] = "Obst und Gemüse";
 
         WriteBatch batch = firebaseFirestore.batch();
-        collectionReference = firebaseFirestore.collection("Einkaufszettel");
-        collectionSaveReference = firebaseFirestore.collection("SaveEinkaufszettel");
+        collectionReference = firebaseFirestore.collection(FIRESTORE_EINKAUFSZETTEL_COLLECTION);
+        collectionSaveReference = firebaseFirestore.collection(FIRESTORE_SAVE_EINKAUFSZETTEL_COLLECTION);
         int i = 0;
         for (String currentTitle : categoryNameArray) {
             batch.set(collectionReference.document(categoryNameArray[i]), new Note(currentTitle, categoryPosition(i), Note.NOTE_NO_COLOR, Note.CATEGORY));
@@ -261,12 +208,10 @@ public class MainActivity extends AppCompatActivity {
                     }
                 } else {
                     which_category = String.valueOf(note.getAdapterPos().charAt(0));
-                    mSpeechRecognizer.startListening(mSpeechRecognizerIntent);
+                    customSpeechRecognition.startSpeechRequest(which_category);
                 }
             }
         });
-
-        checkPermission();
 
         fab_done = findViewById(R.id.fab_shoppingDone);
         fab_done.setOnClickListener(new View.OnClickListener() {
@@ -301,6 +246,26 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == RC_SIGN_IN) {
+            IdpResponse response = IdpResponse.fromResultIntent(data);
+
+            if (resultCode == RESULT_OK) {
+                // Successfully signed in
+                FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+                // ...
+            } else {
+                // Sign in failed. If response is null the user canceled the
+                // sign-in flow using the back button. Otherwise check
+                // response.getError().getErrorCode() and handle the error.
+                finish();
+            }
+        }
     }
 
     @Override
@@ -374,19 +339,11 @@ public class MainActivity extends AppCompatActivity {
             openWhatsappContact("4915738975901");
             return true;
         }
-        return super.onOptionsItemSelected(item);
-    }
-
-    private void checkPermission() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            if (!(ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED)) {
-                this.requestPermissions(
-                        new String[]{
-                                Manifest.permission.RECORD_AUDIO
-                        },
-                        1);
-            }
+        if (id == R.id.signout) {
+            securityHandling.firebaseSignOut();
+            return true;
         }
+        return super.onOptionsItemSelected(item);
     }
 
     @Override

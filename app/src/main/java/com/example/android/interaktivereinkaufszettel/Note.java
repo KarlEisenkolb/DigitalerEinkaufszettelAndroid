@@ -8,10 +8,10 @@ public class Note {
     static final long NOTE = 0;
     static final long CATEGORY = 1;
 
-    private String adapterPos = "0";
-    private String content = "default";
-    private long noteColor = NOTE_NO_COLOR;
-    private long type = NOTE;
+    private String adapterPos = "0"; //adapterPos
+    private String content = "default"; //content
+    private long noteColor = NOTE_NO_COLOR; //noteColor
+    private long type = NOTE; //type
 
     public Note() {
     }
@@ -34,10 +34,6 @@ public class Note {
 
     public String getAdapterPos() {
         return adapterPos;
-    }
-
-    public void setAdapterPos(String adapterPos) {
-        this.adapterPos = adapterPos;
     }
 
     public long getType() {
