@@ -20,7 +20,8 @@ import javax.crypto.spec.SecretKeySpec;
 public class Crypt {
 
     final String TAG = "CRYPTCLASS";
-    private final String firebaseStringKey = "oChvIXgFu9BqlaujP/0aT7j8WC/c02KuQxRnNmAwq5k="; // Hier neuen Key einfügen
+    private final String firebaseStringKey = "oChvIXgFu9BqlaujP/0aT7j8WC/c02KuQxRnNmAwq5k="; // Hier neuen Key einfüge
+    private SecretKey firebaseKey;
 
     public Crypt() {
 
@@ -35,48 +36,80 @@ public class Crypt {
             e.printStackTrace();
         }*/
 
-
-
-
+        byte[] encodedKey = Base64.decode(firebaseStringKey, Base64.DEFAULT);
+        firebaseKey = new SecretKeySpec(encodedKey, 0, encodedKey.length, "AES");
     }
 
-     public byte[] encrypt(String string){
-
-     }
-
-    public int decrypt(byte[] bytes){
-
-    }
-
-        "freunde".charAt(0);
-
-        String stringText = "Hallo was geht ab!";
-        byte[] byteText = stringText.getBytes();
-
+    private String encryptMain(String string){
+        String encryptedString = "en failed!";
         try {
-
-            byte[] encodedKey = Base64.decode(firebaseStringKey, Base64.DEFAULT);
-            SecretKey firebaseKey = new SecretKeySpec(encodedKey, 0, encodedKey.length, "AES");
-
             Cipher cipher_en = Cipher.getInstance("AES/GCM/NoPadding");
             cipher_en.init(Cipher.ENCRYPT_MODE, firebaseKey);
-            byte[] cipherText = cipher_en.doFinal(byteText);
+
+            byte[] cipherText = cipher_en.doFinal(string.getBytes());
             byte[] iv = cipher_en.getIV();
 
-            Log.d(TAG, "Crypt Constructor: " +cipherText);
+            String cipherTextString = Base64.encodeToString(cipherText, Base64.DEFAULT);
+            String ivString = Base64.encodeToString(iv, Base64.DEFAULT);
 
-            // Entschluesseln
+            Log.d(TAG, "encryptString cipherTextString: "+cipherTextString);
+            Log.d(TAG, "encryptString ivString: "+ivString);
+
+            encryptedString = ivString+cipherTextString;
+
+        } catch (NoSuchPaddingException | NoSuchAlgorithmException | InvalidKeyException | BadPaddingException | IllegalBlockSizeException e) {
+            e.printStackTrace();
+            Log.d(TAG, "encryptString: Try-Catch Failed!");
+        }
+        return encryptedString;
+    }
+
+    private String decryptMain(String string){
+        String decryptedString = "de failed!";
+        try {
             Cipher cipher_de = Cipher.getInstance("AES/GCM/NoPadding");
+
+            String cipherTextString = string.substring(16);
+            String ivString = string.substring(0,16);
+
+            Log.d(TAG, "decryptString cipherTextString: "+cipherTextString);
+            Log.d(TAG, "decryptString ivString: "+ivString);
+
+            byte[] cipherText = Base64.decode(cipherTextString, Base64.DEFAULT);
+            byte[] iv = Base64.decode(ivString, Base64.DEFAULT);
+
             final GCMParameterSpec spec = new GCMParameterSpec(128, iv);
             cipher_de.init(Cipher.DECRYPT_MODE, firebaseKey, spec);
-            byte[] cipherData2 = cipher_de.doFinal(cipherText);
-            String erg = new String(cipherData2);
-
-            Log.d(TAG, "Crypt Constructor: " +erg);
-
-        } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | BadPaddingException | IllegalBlockSizeException | InvalidAlgorithmParameterException e) {
+            byte[] decryptedStringBytes = cipher_de.doFinal(cipherText);
+            decryptedString = new String( decryptedStringBytes);
+        } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidAlgorithmParameterException | InvalidKeyException | BadPaddingException | IllegalBlockSizeException e) {
             e.printStackTrace();
-            Log.d(TAG, "Try-Catch Failed!");
+            Log.d(TAG, "decryptString: Try-Catch Failed!: "+e.getMessage());
         }
+        return decryptedString;
+    }
 
+     public String encryptString(String string){
+        return encryptMain(string);
+     }
+
+    public String decryptString(String string){
+        return decryptMain(string);
+    }
+
+    public String encryptLong(long number){
+        return encryptMain(String.valueOf(number));
+    }
+
+    public long decryptLong(String number){
+        return Long.valueOf(decryptMain(number));
+    }
+
+    public String encryptDouble(double number){
+        return encryptMain(String.valueOf(number));
+    }
+
+    public double decryptDouble(String number){
+        return Double.valueOf(decryptMain(number));
+    }
 }

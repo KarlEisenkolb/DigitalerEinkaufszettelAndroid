@@ -60,6 +60,7 @@ public class MainActivity extends AppCompatActivity {
     private NoteAdapter adapter;
     private Menu menu;
     private FloatingActionButton fab_done;
+    private Crypt crypt;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -68,8 +69,7 @@ public class MainActivity extends AppCompatActivity {
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        Crypt crypt = new Crypt();
-
+        crypt = new Crypt();
         securityHandling = new CustomFirebaseSecurityHandling(this);
 
         final CustomSpeechRecognition customSpeechRecognition = new CustomSpeechRecognition(this);
@@ -133,7 +133,7 @@ public class MainActivity extends AppCompatActivity {
                 int size = queryDocumentSnapshots.size() - category_count;
 
                 for (QueryDocumentSnapshot doc : queryDocumentSnapshots) {
-                    if (doc.getLong(Note.NOTE_COLOR) == Note.NOTE_COLOR_GREEN) {
+                    if (crypt.decryptLong(doc.getString(Note.NOTE_COLOR)) == Note.NOTE_COLOR_GREEN) {
                         green_counter++;
                     }
                 }
@@ -197,10 +197,10 @@ public class MainActivity extends AppCompatActivity {
                 if (note.gibType() == Note.NOTE) {
                     if (note.gibNoteColor() == note.NOTE_NO_COLOR) {
                         soundPool.play(turn_greenSound, 0.07F, 0.07F, 0, 0, 1);
-                        collectionReference.document(id).update(Note.NOTE_COLOR, note.NOTE_COLOR_GREEN);
+                        collectionReference.document(id).update(Note.NOTE_COLOR, crypt.encryptLong(note.NOTE_COLOR_GREEN));
                     } else {
                         soundPool.play(turn_greenSound, 0.07F, 0.07F, 0, 0, 1);
-                        collectionReference.document(id).update(Note.NOTE_COLOR, note.NOTE_NO_COLOR);
+                        collectionReference.document(id).update(Note.NOTE_COLOR, crypt.encryptLong(note.NOTE_NO_COLOR));
                     }
                 }
             }
@@ -212,7 +212,7 @@ public class MainActivity extends AppCompatActivity {
                 if (note.gibType() == Note.NOTE) {
                     if (note.gibNoteColor() != note.NOTE_COLOR_YELLOW) {
                         soundPool.play(turn_orangeSound, 0.2F, 0.2F, 0, 0, 1);
-                        collectionReference.document(id).update(Note.NOTE_COLOR, note.NOTE_COLOR_YELLOW);
+                        collectionReference.document(id).update(Note.NOTE_COLOR, crypt.encryptLong(note.NOTE_COLOR_YELLOW));
                     }
                 } else {
                     which_category = String.valueOf(note.gibAdapterPos().charAt(0));

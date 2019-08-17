@@ -41,12 +41,12 @@ public class NoteAdapter extends FirestoreRecyclerAdapter<Note, RecyclerView.Vie
     @Override
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position, @NonNull Note note) {
         if (holder instanceof NoteHolder) {
-            ((NoteHolder) holder).textViewContent.setText(note.getContent());
+            ((NoteHolder) holder).textViewContent.setText(note.gibContent());
 
-            if (note.getNoteColor() == Note.NOTE_COLOR_GREEN) {
+            if (note.gibNoteColor() == Note.NOTE_COLOR_GREEN) {
                 ((NoteHolder) holder).itemViewId.setBackgroundColor(Color.parseColor("#388E3C"));
                 Log.d("onBind ", "Green");
-            } else if (note.getNoteColor() == Note.NOTE_COLOR_YELLOW) {
+            } else if (note.gibNoteColor() == Note.NOTE_COLOR_YELLOW) {
                 ((NoteHolder) holder).itemViewId.setBackgroundColor(Color.parseColor("#FF8F00"));
                 Log.d("onBind ", "Yellow");
             } else {
@@ -54,12 +54,12 @@ public class NoteAdapter extends FirestoreRecyclerAdapter<Note, RecyclerView.Vie
                 Log.d("onBind ", "Gray");
             }
         } else {
-            ((CategoryHolder) holder).textViewContent.setText(note.getContent());
+            ((CategoryHolder) holder).textViewContent.setText(note.gibContent());
 
-            if (note.getNoteColor() == Note.NOTE_COLOR_GREEN) {
+            if (note.gibNoteColor() == Note.NOTE_COLOR_GREEN) {
                 ((CategoryHolder) holder).itemViewId.setBackgroundColor(Color.parseColor("#388E3C"));
                 Log.d("onBind ", "Green");
-            } else if (note.getNoteColor() == Note.NOTE_COLOR_YELLOW) {
+            } else if (note.gibNoteColor() == Note.NOTE_COLOR_YELLOW) {
                 ((CategoryHolder) holder).itemViewId.setBackgroundColor(Color.parseColor("#FF8F00"));
                 Log.d("onBind ", "Yellow");
             } else {
@@ -145,7 +145,7 @@ public class NoteAdapter extends FirestoreRecyclerAdapter<Note, RecyclerView.Vie
 
     @Override
     public int getItemViewType(int position) {
-        return (int) getSnapshots().get(position).getType();
+        return (int) getSnapshots().get(position).gibType();
     }
 
     public interface OnItemClickListener {

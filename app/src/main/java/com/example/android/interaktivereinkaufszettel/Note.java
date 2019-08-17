@@ -13,44 +13,47 @@ public class Note {
     static final String NOTE_COLOR = "eiz1WXHTZ3o";
     static final String TYPE ="lMIs9w2TzUP";
 
-    private String inXEAIWqkta = "0"; //adapterPos
-    private String bZI0mGySHpL = "default"; //content
-    private long eiz1WXHTZ3o = NOTE_NO_COLOR; //noteColor
-    private long lMIs9w2TzUP = NOTE; //type
+    private String bZI0mGySHpL; //content
+    private String inXEAIWqkta; //adapterPos
+    private String eiz1WXHTZ3o; //noteColor
+    private String lMIs9w2TzUP; //type
 
     public Note() {
     }
 
     public Note(String content, String adapterPos, long noteColor, long type) {
-        this.bZI0mGySHpL = content;
-        this.eiz1WXHTZ3o = noteColor;
+        Crypt crypt = new Crypt();
+        this.bZI0mGySHpL = crypt.encryptString(content);
         this.inXEAIWqkta = adapterPos;
-        this.lMIs9w2TzUP = type;
+        this.eiz1WXHTZ3o = crypt.encryptLong(noteColor);
+        this.lMIs9w2TzUP = crypt.encryptLong(type);
     }
 
     public Note(String content, String adapterPos) {
-        this.bZI0mGySHpL = content;
+        Crypt crypt = new Crypt();
+        this.bZI0mGySHpL = crypt.encryptString(content);
         this.inXEAIWqkta = adapterPos;
+        this.eiz1WXHTZ3o = crypt.encryptLong(NOTE_NO_COLOR);
+        this.lMIs9w2TzUP = crypt.encryptLong(NOTE);
     }
 
     public String getinXEAIWqkta() {
         return inXEAIWqkta;
     }
 
-    public String getbZI0mGySHpL() {
-        return bZI0mGySHpL;
-    }
+    public String getbZI0mGySHpL() { return bZI0mGySHpL; }
 
-    public long geteiz1WXHTZ3o() {
+    public String geteiz1WXHTZ3o() {
         return eiz1WXHTZ3o;
     }
 
-    public long getlMIs9w2TzUP() {
+    public String getlMIs9w2TzUP() {
         return lMIs9w2TzUP;
     }
 
     public String gibContent() {
-        return getbZI0mGySHpL();
+        Crypt crypt = new Crypt();
+        return crypt.decryptString(getbZI0mGySHpL());
     }
 
     public String gibAdapterPos() {
@@ -58,11 +61,13 @@ public class Note {
     }
 
     public long gibType() {
-        return getlMIs9w2TzUP();
+        Crypt crypt = new Crypt();
+        return crypt.decryptLong(getlMIs9w2TzUP());
     }
 
     public long gibNoteColor() {
-        return geteiz1WXHTZ3o();
+        Crypt crypt = new Crypt();
+        return crypt.decryptLong(geteiz1WXHTZ3o());
     }
 
 
