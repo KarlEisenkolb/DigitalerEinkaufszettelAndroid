@@ -21,6 +21,7 @@ import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.CollectionReference;
+import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreException;
@@ -53,7 +54,6 @@ public class MainActivity extends AppCompatActivity {
     private SoundPool soundPool;
     private int deleteSound, finishSound, turn_orangeSound, turn_greenSound, undoSound;
     private FirebaseFirestore firebaseFirestore = FirebaseFirestore.getInstance();
-    private String[] categoryNameArray;
     private CollectionReference collectionReference;
     private CollectionReference collectionSaveReference;
     private RecyclerView recyclerView;
@@ -93,8 +93,7 @@ public class MainActivity extends AppCompatActivity {
 
         //Hardcoded Kategorien festlegen
         final int category_count = 7;
-        categoryNameArray = new String[category_count];
-
+        String[] categoryNameArray = new String[category_count];
         categoryNameArray[0] = "Sonstiges";
         categoryNameArray[1] = "Drogerieprodukte";
         categoryNameArray[2] = "Milch- und Kühlprodukte";
@@ -103,12 +102,21 @@ public class MainActivity extends AppCompatActivity {
         categoryNameArray[5] = "Verpackte Produkte";
         categoryNameArray[6] = "Obst und Gemüse";
 
+        String[] categoryNameId = new String[category_count];
+        categoryNameId[0] = "ldjiSgbebkQlHJ";
+        categoryNameId[1] = "nxhRDElbjheFkv";
+        categoryNameId[2] = "pHLKshvZkdKvDf";
+        categoryNameId[3] = "zgDkLhwGPtSdlk";
+        categoryNameId[4] = "wLd7XDpdV9Iflo";
+        categoryNameId[5] = "pPtkCf8ytIG3lr";
+        categoryNameId[6] = "mt6dd3tM6gf2s0";
+
         WriteBatch batch = firebaseFirestore.batch();
         collectionReference = firebaseFirestore.collection(FIRESTORE_EINKAUFSZETTEL_COLLECTION);
         collectionSaveReference = firebaseFirestore.collection(FIRESTORE_SAVE_EINKAUFSZETTEL_COLLECTION);
         int i = 0;
         for (String currentTitle : categoryNameArray) {
-            batch.set(collectionReference.document(categoryNameArray[i]), new Note(currentTitle, categoryPosition(i), Note.NOTE_NO_COLOR, Note.CATEGORY));
+            batch.set(collectionReference.document(categoryNameId[i]), new Note(currentTitle, categoryPosition(i), Note.NOTE_NO_COLOR, Note.CATEGORY));
             i++;
         }
         batch.commit();
@@ -125,7 +133,7 @@ public class MainActivity extends AppCompatActivity {
                 int size = queryDocumentSnapshots.size() - category_count;
 
                 for (QueryDocumentSnapshot doc : queryDocumentSnapshots) {
-                    if (doc.getLong("noteColor") == Note.NOTE_COLOR_GREEN) {
+                    if (doc.getLong(Note.NOTE_COLOR) == Note.NOTE_COLOR_GREEN) {
                         green_counter++;
                     }
                 }
@@ -143,7 +151,7 @@ public class MainActivity extends AppCompatActivity {
         });
 
         FirestoreRecyclerOptions<Note> options = new FirestoreRecyclerOptions.Builder<Note>()
-                .setQuery(collectionReference.orderBy("adapterPos", Query.Direction.DESCENDING), Note.class)
+                .setQuery(collectionReference.orderBy(Note.ADAPTER_POS, Query.Direction.DESCENDING), Note.class)
                 .build();
 
         recyclerView = findViewById(R.id.recycler_view);
@@ -186,13 +194,13 @@ public class MainActivity extends AppCompatActivity {
         adapter.setOnItemClickListener(new NoteAdapter.OnItemClickListener() {
             @Override
             public void onItemClick(Note note, String id) {
-                if (note.getType() == Note.NOTE) {
-                    if (note.getNoteColor() == note.NOTE_NO_COLOR) {
+                if (note.gibType() == Note.NOTE) {
+                    if (note.gibNoteColor() == note.NOTE_NO_COLOR) {
                         soundPool.play(turn_greenSound, 0.07F, 0.07F, 0, 0, 1);
-                        collectionReference.document(id).update("noteColor", note.NOTE_COLOR_GREEN);
+                        collectionReference.document(id).update(Note.NOTE_COLOR, note.NOTE_COLOR_GREEN);
                     } else {
                         soundPool.play(turn_greenSound, 0.07F, 0.07F, 0, 0, 1);
-                        collectionReference.document(id).update("noteColor", note.NOTE_NO_COLOR);
+                        collectionReference.document(id).update(Note.NOTE_COLOR, note.NOTE_NO_COLOR);
                     }
                 }
             }
@@ -201,13 +209,13 @@ public class MainActivity extends AppCompatActivity {
         adapter.setOnLongItemClickListener(new NoteAdapter.OnLongItemClickListener() {
             @Override
             public void onLongItemClick(Note note, String id) {
-                if (note.getType() == Note.NOTE) {
-                    if (note.getNoteColor() != note.NOTE_COLOR_YELLOW) {
+                if (note.gibType() == Note.NOTE) {
+                    if (note.gibNoteColor() != note.NOTE_COLOR_YELLOW) {
                         soundPool.play(turn_orangeSound, 0.2F, 0.2F, 0, 0, 1);
-                        collectionReference.document(id).update("noteColor", note.NOTE_COLOR_YELLOW);
+                        collectionReference.document(id).update(Note.NOTE_COLOR, note.NOTE_COLOR_YELLOW);
                     }
                 } else {
-                    which_category = String.valueOf(note.getAdapterPos().charAt(0));
+                    which_category = String.valueOf(note.gibAdapterPos().charAt(0));
                     customSpeechRecognition.startSpeechRequest(which_category);
                 }
             }
@@ -224,7 +232,7 @@ public class MainActivity extends AppCompatActivity {
                 soundPool.play(finishSound, 0.2F, 0.2F, 0, 0, 1);
 
                 for (int i = 0; i < adapter.getSnapshots().size(); i++) {
-                    if (adapter.getSnapshots().get(i).getNoteColor() == Note.NOTE_COLOR_GREEN) {
+                    if (adapter.getSnapshots().get(i).gibNoteColor() == Note.NOTE_COLOR_GREEN) {
                         batch.delete(collectionReference.document(adapter.getSnapshots().getSnapshot(i).getId()));
                         notesGreen.add(adapter.getSnapshots().get(i));
                     }
@@ -298,7 +306,7 @@ public class MainActivity extends AppCompatActivity {
                                     batch.delete(collectionSaveReference.document(document.getId()));
                                 }
                                 for (Note note : adapter.getSnapshots()) {
-                                    if (note.getType() == Note.NOTE)
+                                    if (note.gibType() == Note.NOTE)
                                         batch.set(collectionSaveReference.document(), note);
                                 }
                                 batch.commit();
@@ -436,7 +444,7 @@ public class MainActivity extends AppCompatActivity {
     private int numberOfItemsInCategory(String category) {
         int count = -1;
         for (Note note : adapter.getSnapshots()) {
-            if (String.valueOf(note.getAdapterPos().charAt(0)).equals(category))
+            if (String.valueOf(note.gibAdapterPos().charAt(0)).equals(category))
                 count++;
         }
         return count;
