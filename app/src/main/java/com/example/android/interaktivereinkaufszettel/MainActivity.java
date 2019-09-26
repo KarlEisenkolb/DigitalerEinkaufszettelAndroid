@@ -11,6 +11,15 @@ import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
+import androidx.recyclerview.widget.ItemTouchHelper;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.firebase.ui.auth.IdpResponse;
 import com.firebase.ui.firestore.FirestoreRecyclerOptions;
@@ -21,7 +30,9 @@ import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.CollectionReference;
+import com.google.firebase.firestore.DocumentChange;
 import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreException;
@@ -34,18 +45,12 @@ import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
-import androidx.recyclerview.widget.ItemTouchHelper;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
+import static com.example.android.interaktivereinkaufszettel.Note.ADAPTER_POS;
 
 public class MainActivity extends AppCompatActivity {
 
-    final static String FIRESTORE_EINKAUFSZETTEL_COLLECTION = "Einkaufszettel";
-    final static String FIRESTORE_SAVE_EINKAUFSZETTEL_COLLECTION = "SaveEinkaufszettel";
+    final static String FIRESTORE_EINKAUFSZETTEL_COLLECTION         = "xgYkyHsoUIF33PIk11xWvM";
+    final static String FIRESTORE_SAVE_EINKAUFSZETTEL_COLLECTION    = "xW5LGz1vR9D67rIwH9yROQ";
     final static int RC_SIGN_IN = 0;
 
     static String which_category = "default";
@@ -61,6 +66,7 @@ public class MainActivity extends AppCompatActivity {
     private Menu menu;
     private FloatingActionButton fab_done;
     private Crypt crypt;
+    private String[] categoryNameId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -74,6 +80,9 @@ public class MainActivity extends AppCompatActivity {
 
         final CustomSpeechRecognition customSpeechRecognition = new CustomSpeechRecognition(this);
 
+        //===================================================================================================================================================
+        //Audio Setup
+        //===================================================================================================================================================
         audio = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
         AudioAttributes audioAttributes = new AudioAttributes.Builder()
                 .setUsage(AudioAttributes.USAGE_ASSISTANCE_SONIFICATION)
@@ -91,7 +100,9 @@ public class MainActivity extends AppCompatActivity {
         turn_greenSound = soundPool.load(this, R.raw.turn_green, 1);
         undoSound = soundPool.load(this, R.raw.undo, 1);
 
+        //===================================================================================================================================================
         //Hardcoded Kategorien festlegen
+        //===================================================================================================================================================
         final int category_count = 7;
         String[] categoryNameArray = new String[category_count];
         categoryNameArray[0] = "Sonstiges";
@@ -102,7 +113,7 @@ public class MainActivity extends AppCompatActivity {
         categoryNameArray[5] = "Verpackte Produkte";
         categoryNameArray[6] = "Obst und Gemüse";
 
-        String[] categoryNameId = new String[category_count];
+        categoryNameId = new String[category_count];
         categoryNameId[0] = "ldjiSgbebkQlHJ";
         categoryNameId[1] = "nxhRDElbjheFkv";
         categoryNameId[2] = "pHLKshvZkdKvDf";
@@ -116,24 +127,57 @@ public class MainActivity extends AppCompatActivity {
         collectionSaveReference = firebaseFirestore.collection(FIRESTORE_SAVE_EINKAUFSZETTEL_COLLECTION);
         int i = 0;
         for (String currentTitle : categoryNameArray) {
-            batch.set(collectionReference.document(categoryNameId[i]), new Note(currentTitle, categoryPosition(i), Note.NOTE_NO_COLOR, Note.CATEGORY));
+            batch.set(collectionReference.document(categoryNameId[i]), new Note(currentTitle, categoryPosition(i), Note.NOTE_NO_COLOR, Note.CATEGORY, categoryNameId[i]));
             i++;
         }
         batch.commit();
 
+        //===================================================================================================================================================
+        //Einkaufsfortschritt im Menü darstellen
+        //===================================================================================================================================================
         collectionReference.addSnapshotListener(new EventListener<QuerySnapshot>() {
             @Override
-            public void onEvent(@Nullable QuerySnapshot queryDocumentSnapshots, @Nullable FirebaseFirestoreException e) {
+            public void onEvent(@Nullable QuerySnapshot snapshots, @Nullable FirebaseFirestoreException e) {
+                // Kategorie grün falls alle Kategorie Items grün sind
+                for (DocumentChange change : snapshots.getDocumentChanges()) {
+                    Note changedNote = change.getDocument().toObject(Note.class);
+                    String category = String.valueOf(changedNote.gibAdapterPos().charAt(0));
+                    int countInCategory = -1;
+                    int countGreenItems = 0;
+                    Note categoryNote = null;
+                    for (DocumentSnapshot doc : snapshots.getDocuments()) {
+                        Note note = doc.toObject(Note.class);
+                        if (String.valueOf(note.gibAdapterPos().charAt(0)).equals(category)) {
+                            if (note.gibType() == Note.CATEGORY)
+                                categoryNote = note;
+
+                            if (note.gibNoteColor() == Note.NOTE_COLOR_GREEN && note.gibType() == Note.NOTE)
+                                countGreenItems++;
+                            countInCategory++;
+                        }
+                    }
+                    if (countInCategory == countGreenItems && countInCategory > 0) {
+                        if (categoryNote.gibNoteColor() != Note.NOTE_COLOR_GREEN) {
+                            collectionReference.document(categoryNote.gibId()).update(Note.NOTE_COLOR, crypt.encryptLong(Note.NOTE_COLOR_GREEN));
+                        }
+                    } else {
+                        if (categoryNote.gibNoteColor() != Note.NOTE_NO_COLOR) {
+                            collectionReference.document(categoryNote.gibId()).update(Note.NOTE_COLOR, crypt.encryptLong(Note.NOTE_NO_COLOR));
+                        }
+                    }
+                }
+
+                //Einkaufsfortschritt im Menü darstellen
                 if (e != null) {
                     Log.w("TAG", "Listen failed.", e);
                     return;
                 }
 
                 int green_counter = 0;
-                int size = queryDocumentSnapshots.size() - category_count;
+                int size = snapshots.size() - category_count;
 
-                for (QueryDocumentSnapshot doc : queryDocumentSnapshots) {
-                    if (crypt.decryptLong(doc.getString(Note.NOTE_COLOR)) == Note.NOTE_COLOR_GREEN) {
+                for (QueryDocumentSnapshot doc : snapshots) {
+                    if (crypt.decryptLong(doc.getString(Note.NOTE_COLOR)) == Note.NOTE_COLOR_GREEN && crypt.decryptLong(doc.getString(Note.TYPE)) != Note.CATEGORY) {
                         green_counter++;
                     }
                 }
@@ -150,8 +194,11 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        //===================================================================================================================================================
+        //Adapter Funktionalitäten
+        //===================================================================================================================================================
         FirestoreRecyclerOptions<Note> options = new FirestoreRecyclerOptions.Builder<Note>()
-                .setQuery(collectionReference.orderBy(Note.ADAPTER_POS, Query.Direction.DESCENDING), Note.class)
+                .setQuery(collectionReference.orderBy(ADAPTER_POS, Query.Direction.DESCENDING), Note.class)
                 .build();
 
         recyclerView = findViewById(R.id.recycler_view);
@@ -185,7 +232,7 @@ public class MainActivity extends AppCompatActivity {
                             @Override
                             public void onClick(View view) {
                                 soundPool.play(undoSound, 0.1F, 0.1F, 0, 0, 1);
-                                collectionReference.add(note);
+                                collectionReference.document(note.gibId()).set(note);
                             }
                         }).show();
                 }
@@ -194,6 +241,7 @@ public class MainActivity extends AppCompatActivity {
         adapter.setOnItemClickListener(new NoteAdapter.OnItemClickListener() {
             @Override
             public void onItemClick(Note note, String id) {
+                final Note noteClicked = note;
                 if (note.gibType() == Note.NOTE) {
                     if (note.gibNoteColor() == note.NOTE_NO_COLOR) {
                         soundPool.play(turn_greenSound, 0.07F, 0.07F, 0, 0, 1);
@@ -209,6 +257,7 @@ public class MainActivity extends AppCompatActivity {
         adapter.setOnLongItemClickListener(new NoteAdapter.OnLongItemClickListener() {
             @Override
             public void onLongItemClick(Note note, String id) {
+                final Note noteClicked = note;
                 if (note.gibType() == Note.NOTE) {
                     if (note.gibNoteColor() != note.NOTE_COLOR_YELLOW) {
                         soundPool.play(turn_orangeSound, 0.2F, 0.2F, 0, 0, 1);
@@ -216,7 +265,7 @@ public class MainActivity extends AppCompatActivity {
                     }
                 } else {
                     which_category = String.valueOf(note.gibAdapterPos().charAt(0));
-                    customSpeechRecognition.startSpeechRequest(which_category);
+                    customSpeechRecognition.startSpeechRequest(which_category , note);
                 }
             }
         });
@@ -231,11 +280,13 @@ public class MainActivity extends AppCompatActivity {
 
                 soundPool.play(finishSound, 0.2F, 0.2F, 0, 0, 1);
 
-                for (int i = 0; i < adapter.getSnapshots().size(); i++) {
-                    if (adapter.getSnapshots().get(i).gibNoteColor() == Note.NOTE_COLOR_GREEN) {
-                        batch.delete(collectionReference.document(adapter.getSnapshots().getSnapshot(i).getId()));
-                        notesGreen.add(adapter.getSnapshots().get(i));
+                for (Note currentNote : adapter.getSnapshots()) {
+                    if (currentNote.gibNoteColor() == Note.NOTE_COLOR_GREEN && currentNote.gibType() == Note.NOTE) {
+                        batch.delete(collectionReference.document(currentNote.gibId()));
+                        notesGreen.add(currentNote);
                     }
+                    if (currentNote.gibNoteColor() == Note.NOTE_COLOR_GREEN && currentNote.gibType() == Note.CATEGORY)
+                        batch.update(collectionReference.document(currentNote.gibId()), Note.NOTE_COLOR, crypt.encryptLong(Note.NOTE_NO_COLOR));
                 }
                 batch.commit();
 
@@ -247,7 +298,7 @@ public class MainActivity extends AppCompatActivity {
                                 soundPool.play(undoSound, 0.1F, 0.1F, 0, 0, 1);
                                 WriteBatch batch = firebaseFirestore.batch();
                                 for (Note note : notesGreen)
-                                    batch.set(collectionReference.document(), note);
+                                    batch.set(collectionReference.document(note.gibId()), note);
                                 batch.commit();
                             }
                         }).show();
@@ -266,7 +317,8 @@ public class MainActivity extends AppCompatActivity {
             if (resultCode == RESULT_OK) {
                 // Successfully signed in
                 FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-                // ...
+                Toast.makeText(this, "Neu starten bitte!", Toast.LENGTH_LONG).show();
+                finish();
             } else {
                 // Sign in failed. If response is null the user canceled the
                 // sign-in flow using the back button. Otherwise check
@@ -307,7 +359,7 @@ public class MainActivity extends AppCompatActivity {
                                 }
                                 for (Note note : adapter.getSnapshots()) {
                                     if (note.gibType() == Note.NOTE)
-                                        batch.set(collectionSaveReference.document(), note);
+                                        batch.set(collectionSaveReference.document(note.gibId()), note);
                                 }
                                 batch.commit();
                             }
@@ -331,7 +383,10 @@ public class MainActivity extends AppCompatActivity {
                                     if (task.isSuccessful()) {
                                         WriteBatch batch = firebaseFirestore.batch();
                                         for (QueryDocumentSnapshot document : task.getResult()) {
-                                            batch.set(collectionReference.document(), document.toObject(Note.class));
+                                            DocumentReference docRef = collectionReference.document();
+                                            Note noteToAdd = document.toObject(Note.class);
+                                            noteToAdd.setzeId(docRef.getId());
+                                            batch.set(collectionReference.document(docRef.getId()), noteToAdd);
                                         }
                                         batch.commit();
                                     }
@@ -343,8 +398,8 @@ public class MainActivity extends AppCompatActivity {
             }).show();
 
         }
-        if (id == R.id.messageWhatsApp) {
-            openWhatsappContact("4915738975901");
+        if (id == R.id.geldmanagment) {
+
             return true;
         }
         if (id == R.id.signout) {
@@ -361,24 +416,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
-    protected void onPause() {
-        super.onPause();
-    }
-
-    @Override
     protected void onStop() {
         super.onStop();
         adapter.stopListening();
-    }
-
-    void openWhatsappContact(String number) {
-        Intent sendIntent = new Intent();
-        sendIntent.setAction(Intent.ACTION_SEND);
-        sendIntent.putExtra(Intent.EXTRA_TEXT, "Einkaufszettel");
-        sendIntent.setType("text/plain");
-        sendIntent.putExtra("jid", number + "@s.whatsapp.net");
-        sendIntent.setPackage("com.whatsapp");
-        startActivity(sendIntent);
     }
 
     @Override
@@ -440,15 +480,4 @@ public class MainActivity extends AppCompatActivity {
         }
 
     }
-
-    private int numberOfItemsInCategory(String category) {
-        int count = -1;
-        for (Note note : adapter.getSnapshots()) {
-            if (String.valueOf(note.gibAdapterPos().charAt(0)).equals(category))
-                count++;
-        }
-        return count;
-    }
-
-
 }

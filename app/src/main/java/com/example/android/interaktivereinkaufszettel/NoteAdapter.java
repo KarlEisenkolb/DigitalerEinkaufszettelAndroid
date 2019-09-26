@@ -45,26 +45,33 @@ public class NoteAdapter extends FirestoreRecyclerAdapter<Note, RecyclerView.Vie
 
             if (note.gibNoteColor() == Note.NOTE_COLOR_GREEN) {
                 ((NoteHolder) holder).itemViewId.setBackgroundColor(Color.parseColor("#388E3C"));
+                ((NoteHolder) holder).textViewContent.setTextColor(Color.BLACK);
                 Log.d("onBind ", "Green");
-            } else if (note.gibNoteColor() == Note.NOTE_COLOR_YELLOW) {
-                ((NoteHolder) holder).itemViewId.setBackgroundColor(Color.parseColor("#FF8F00"));
-                Log.d("onBind ", "Yellow");
-            } else {
-                ((NoteHolder) holder).itemViewId.setBackgroundColor(Color.parseColor("#FFFFFF")); //#E0E0E0
+            } else if (note.gibNoteColor() == Note.NOTE_NO_COLOR) {
+                ((NoteHolder) holder).itemViewId.setBackgroundColor(Color.parseColor("#FFFFFF"));//#E0E0E0
+                ((NoteHolder) holder).textViewContent.setTextColor(Color.BLACK);
                 Log.d("onBind ", "Gray");
+            } else {
+                ((NoteHolder) holder).itemViewId.setBackgroundColor(Color.parseColor("#FF8F00"));
+                ((NoteHolder) holder).textViewContent.setTextColor(Color.BLACK);
+                Log.d("onBind ", "Yellow");
             }
         } else {
             ((CategoryHolder) holder).textViewContent.setText(note.gibContent());
 
             if (note.gibNoteColor() == Note.NOTE_COLOR_GREEN) {
                 ((CategoryHolder) holder).itemViewId.setBackgroundColor(Color.parseColor("#388E3C"));
+                ((CategoryHolder) holder).textViewContent.setTextColor(Color.BLACK);
                 Log.d("onBind ", "Green");
-            } else if (note.gibNoteColor() == Note.NOTE_COLOR_YELLOW) {
-                ((CategoryHolder) holder).itemViewId.setBackgroundColor(Color.parseColor("#FF8F00"));
-                Log.d("onBind ", "Yellow");
-            } else {
+            } else if (note.gibNoteColor() == Note.NOTE_NO_COLOR) {
                 ((CategoryHolder) holder).itemViewId.setBackgroundColor(Color.parseColor("#757575")); //#E0E0E0
+                ((CategoryHolder) holder).textViewContent.setTextColor(Color.WHITE);
                 Log.d("onBind ", "Gray");
+            } else {
+                ((CategoryHolder) holder).itemViewId.setBackgroundColor(Color.parseColor("#FF8F00"));
+                ((CategoryHolder) holder).textViewContent.setTextColor(Color.BLACK);
+                Log.d("onBind ", "Yellow");
+
             }
         }
     }

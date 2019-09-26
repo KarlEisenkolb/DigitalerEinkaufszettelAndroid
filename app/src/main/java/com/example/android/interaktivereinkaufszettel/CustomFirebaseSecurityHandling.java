@@ -2,7 +2,6 @@ package com.example.android.interaktivereinkaufszettel;
 
 import android.Manifest;
 import android.app.Activity;
-import android.content.Context;
 import android.content.pm.PackageManager;
 import android.os.Build;
 
@@ -17,9 +16,10 @@ import com.google.firebase.auth.FirebaseAuth;
 import java.util.Arrays;
 import java.util.List;
 
+import static com.example.android.interaktivereinkaufszettel.MainActivity.RC_SIGN_IN;
+
 public class CustomFirebaseSecurityHandling {
 
-    final int RC_SIGN_IN = 0;
     private Activity mainActivity;
 
     public CustomFirebaseSecurityHandling(Activity activity) {

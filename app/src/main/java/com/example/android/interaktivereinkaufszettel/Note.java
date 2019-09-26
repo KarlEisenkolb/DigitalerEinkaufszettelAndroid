@@ -9,32 +9,36 @@ public class Note {
     static final long CATEGORY = 1;
 
     static final String ADAPTER_POS = "inXEAIWqkta";
-    static final String CONTENT = "bZI0mGySHpL";
-    static final String NOTE_COLOR = "eiz1WXHTZ3o";
-    static final String TYPE ="lMIs9w2TzUP";
+    static final String CONTENT     = "bZI0mGySHpL";
+    static final String NOTE_COLOR  = "eiz1WXHTZ3o";
+    static final String TYPE        = "lMIs9w2TzUP";
+    static final String ID          = "sMIosTjdmzc";
 
     private String bZI0mGySHpL; //content
     private String inXEAIWqkta; //adapterPos
     private String eiz1WXHTZ3o; //noteColor
     private String lMIs9w2TzUP; //type
+    private String sMIosTjdmzc; //document ID
 
     public Note() {
     }
 
-    public Note(String content, String adapterPos, long noteColor, long type) {
+    public Note(String content, String adapterPos, long noteColor, long type, String documentId) {
         Crypt crypt = new Crypt();
         this.bZI0mGySHpL = crypt.encryptString(content);
         this.inXEAIWqkta = adapterPos;
         this.eiz1WXHTZ3o = crypt.encryptLong(noteColor);
         this.lMIs9w2TzUP = crypt.encryptLong(type);
+        this.sMIosTjdmzc = crypt.encryptString(documentId);
     }
 
-    public Note(String content, String adapterPos) {
+    public Note(String content, String adapterPos, String documentId) {
         Crypt crypt = new Crypt();
         this.bZI0mGySHpL = crypt.encryptString(content);
         this.inXEAIWqkta = adapterPos;
         this.eiz1WXHTZ3o = crypt.encryptLong(NOTE_NO_COLOR);
         this.lMIs9w2TzUP = crypt.encryptLong(NOTE);
+        this.sMIosTjdmzc = crypt.encryptString(documentId);
     }
 
     public String getinXEAIWqkta() {
@@ -47,9 +51,9 @@ public class Note {
         return eiz1WXHTZ3o;
     }
 
-    public String getlMIs9w2TzUP() {
-        return lMIs9w2TzUP;
-    }
+    public String getlMIs9w2TzUP() { return lMIs9w2TzUP; }
+
+    public String getsMIosTjdmzc() { return sMIosTjdmzc; }
 
     public String gibContent() {
         Crypt crypt = new Crypt();
@@ -70,5 +74,19 @@ public class Note {
         return crypt.decryptLong(geteiz1WXHTZ3o());
     }
 
+    public String gibId() {
+        Crypt crypt = new Crypt();
+        return crypt.decryptString(getsMIosTjdmzc());
+    }
+
+    public void setzeId(String documentId) {
+        Crypt crypt = new Crypt();
+        this.sMIosTjdmzc = crypt.encryptString(documentId);
+    }
+
+    public void setzeColor(long noteColor) {
+        Crypt crypt = new Crypt();
+        this.eiz1WXHTZ3o = crypt.encryptLong(noteColor);
+    }
 
 }

@@ -6,16 +6,16 @@
     <item
         android:id="@+id/item_counter"
         app:showAsAction="always"
-        android:title="itemCounter"/>
+        android:title=""/>
     <item
         android:id="@+id/progress"
         app:showAsAction="always"
-        android:title="progress"/>
+        android:title=""/>
     <item
-        android:id="@+id/messageWhatsApp"
-        android:title="NACHRICHT"
+        android:id="@+id/geldmanagment"
+        android:title="GELDMANAGMENT"
         app:showAsAction="always"
-        android:icon="@drawable/mail"/>
+        android:icon="@drawable/money"/>
 
     <item
         android:id="@+id/laden"

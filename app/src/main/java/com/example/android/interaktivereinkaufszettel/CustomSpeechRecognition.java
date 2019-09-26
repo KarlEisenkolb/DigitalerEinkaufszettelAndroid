@@ -8,7 +8,12 @@ import android.speech.RecognizerIntent;
 import android.speech.SpeechRecognizer;
 import android.util.Log;
 
+import androidx.annotation.NonNull;
+
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.firestore.CollectionReference;
+import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.util.ArrayList;
@@ -23,6 +28,7 @@ public class CustomSpeechRecognition {
     private SpeechRecognizer mSpeechRecognizer;
     private Intent mSpeechRecognizerIntent;
     private String which_category = "default";
+    private Note categoryNote;
 
     public CustomSpeechRecognition(Context ctx) {
 
@@ -70,8 +76,15 @@ public class CustomSpeechRecognition {
 
                 Log.d("onResults", "test: " + pos);
                 //displaying the first match
-                if (matches != null)
-                    collectionReference.add(new Note(matches.get(0), which_category + pos));
+                if (matches != null) {
+                    DocumentReference docRef = collectionReference.document();
+                    docRef.set(new Note(matches.get(0), which_category + pos, docRef.getId()));
+
+                    if (categoryNote.gibNoteColor() != Note.NOTE_NO_COLOR) {
+                        Crypt crypt = new Crypt();
+                        collectionReference.document(categoryNote.gibId()).update(Note.NOTE_COLOR, crypt.encryptLong(Note.NOTE_NO_COLOR));
+                    }
+                }
             }
 
             @Override
@@ -85,8 +98,9 @@ public class CustomSpeechRecognition {
 
     }
 
-    public void startSpeechRequest(String which_category){
+    public void startSpeechRequest(String which_category, Note categoryNote){
     this.which_category = which_category;
+    this.categoryNote = categoryNote;
     mSpeechRecognizer.startListening(mSpeechRecognizerIntent);
     }
 
