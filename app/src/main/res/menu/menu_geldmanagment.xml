@@ -1,0 +1,29 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context="com.example.android.interaktivereinkaufszettel.MainActivity">
+
+    <item
+        android:id="@+id/item_counter"
+        android:orderInCategory="100"
+        app:showAsAction="always"
+        android:title="34"/>
+    <item
+        android:id="@+id/current_user"
+        android:orderInCategory="100"
+        android:title=""
+        app:showAsAction="always"/>
+    <item
+        android:id="@+id/kontostand"
+        android:orderInCategory="100"
+        app:showAsAction="always"
+        android:title="-300€"/>
+    <item
+        android:id="@+id/print"
+        app:showAsAction="never"
+        android:title="Aktuelle Liste drucken" />
+    <item
+        android:id="@+id/nutzerAndLists"
+        app:showAsAction="never"
+        android:title="Nutzer und Listen  bearb." />
+</menu>

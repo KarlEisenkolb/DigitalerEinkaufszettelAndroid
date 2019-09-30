@@ -1,5 +1,7 @@
 package com.example.android.interaktivereinkaufszettel;
 
+import static com.example.android.interaktivereinkaufszettel.Crypt.CRYPT_USE_DEFAULT_KEY;
+
 public class Note {
 
     static final long NOTE_NO_COLOR = 0;
@@ -24,7 +26,7 @@ public class Note {
     }
 
     public Note(String content, String adapterPos, long noteColor, long type, String documentId) {
-        Crypt crypt = new Crypt();
+        Crypt crypt = new Crypt(CRYPT_USE_DEFAULT_KEY);
         this.bZI0mGySHpL = crypt.encryptString(content);
         this.inXEAIWqkta = adapterPos;
         this.eiz1WXHTZ3o = crypt.encryptLong(noteColor);
@@ -33,7 +35,7 @@ public class Note {
     }
 
     public Note(String content, String adapterPos, String documentId) {
-        Crypt crypt = new Crypt();
+        Crypt crypt = new Crypt(CRYPT_USE_DEFAULT_KEY);
         this.bZI0mGySHpL = crypt.encryptString(content);
         this.inXEAIWqkta = adapterPos;
         this.eiz1WXHTZ3o = crypt.encryptLong(NOTE_NO_COLOR);
@@ -44,19 +46,15 @@ public class Note {
     public String getinXEAIWqkta() {
         return inXEAIWqkta;
     }
-
     public String getbZI0mGySHpL() { return bZI0mGySHpL; }
-
     public String geteiz1WXHTZ3o() {
         return eiz1WXHTZ3o;
     }
-
     public String getlMIs9w2TzUP() { return lMIs9w2TzUP; }
-
     public String getsMIosTjdmzc() { return sMIosTjdmzc; }
 
     public String gibContent() {
-        Crypt crypt = new Crypt();
+        Crypt crypt = new Crypt(CRYPT_USE_DEFAULT_KEY);
         return crypt.decryptString(getbZI0mGySHpL());
     }
 
@@ -65,27 +63,27 @@ public class Note {
     }
 
     public long gibType() {
-        Crypt crypt = new Crypt();
+        Crypt crypt = new Crypt(CRYPT_USE_DEFAULT_KEY);
         return crypt.decryptLong(getlMIs9w2TzUP());
     }
 
     public long gibNoteColor() {
-        Crypt crypt = new Crypt();
+        Crypt crypt = new Crypt(CRYPT_USE_DEFAULT_KEY);
         return crypt.decryptLong(geteiz1WXHTZ3o());
     }
 
     public String gibId() {
-        Crypt crypt = new Crypt();
+        Crypt crypt = new Crypt(CRYPT_USE_DEFAULT_KEY);
         return crypt.decryptString(getsMIosTjdmzc());
     }
 
     public void setzeId(String documentId) {
-        Crypt crypt = new Crypt();
+        Crypt crypt = new Crypt(CRYPT_USE_DEFAULT_KEY);
         this.sMIosTjdmzc = crypt.encryptString(documentId);
     }
 
     public void setzeColor(long noteColor) {
-        Crypt crypt = new Crypt();
+        Crypt crypt = new Crypt(CRYPT_USE_DEFAULT_KEY);
         this.eiz1WXHTZ3o = crypt.encryptLong(noteColor);
     }
 

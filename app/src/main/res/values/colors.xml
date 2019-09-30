@@ -6,4 +6,6 @@
     <color name="colorListItem">#BDBDBD</color>
     <color name="colorAppBackground">#BDBDBD</color>
     <color name="colorListItemChecked">#00C853</color>
+    <color name="textColorMainText">#2B3D4D</color>
+    <color name="textColorGray">#B4BAC0</color>
 </resources>

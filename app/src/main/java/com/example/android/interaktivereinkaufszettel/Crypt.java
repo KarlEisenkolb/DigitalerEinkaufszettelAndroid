@@ -3,9 +3,12 @@ package com.example.android.interaktivereinkaufszettel;
 import android.util.Base64;
 import android.util.Log;
 
+import java.io.UnsupportedEncodingException;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
+import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Arrays;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
@@ -17,13 +20,7 @@ import javax.crypto.spec.SecretKeySpec;
 
 public class Crypt {
 
-    final String TAG = "Crypt.Class";
-    private final String firebaseStringKey = "oChvIXgFu9BqlaujP/0aT7j8WC/c02KuQxRnNmAwq5k="; // Hier neuen Key einfüge
-    private SecretKey firebaseKey;
-
-    public Crypt() {
-
-        /*KeyGenerator keygen;
+    /*KeyGenerator keygen;
         try {
             keygen = KeyGenerator.getInstance("AES");
             keygen.init(256);
@@ -34,8 +31,41 @@ public class Crypt {
             e.printStackTrace();
         }*/
 
-        byte[] encodedKey = Base64.decode(firebaseStringKey, Base64.DEFAULT);
-        firebaseKey = new SecretKeySpec(encodedKey, 0, encodedKey.length, "AES");
+    final public static int CRYPT_USE_DEFAULT_KEY = 0;
+    final public static int CRYPT_USE_PASSPHRASE = 1;
+
+    final String TAG = "Crypt.Class";
+    private final String firebaseStringKey = "oChvIXgFu9BqlaujP/0aT7j8WC/c02KuQxRnNmAwq5k="; // Hier neuen Key einfüge
+    private SecretKey firebaseKey;
+    private static SecretKey firebasePassphraseKey;
+
+    public static void initializePassphrase(String passphrase) {
+        try {
+            // byte-Array erzeugen
+            byte[] key = passphrase.getBytes("UTF-8");
+            // aus dem Array einen Hash-Wert erzeugen mit MD5 oder SHA
+            MessageDigest sha = MessageDigest.getInstance("SHA-256");
+            key = sha.digest(key);
+            // nur die ersten 128 bit nutzen
+            key = Arrays.copyOf(key, 32);
+            // der fertige Schluessel
+            firebasePassphraseKey = new SecretKeySpec(key, "AES");
+        } catch (UnsupportedEncodingException | NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public Crypt(int type) {
+
+        if (type == CRYPT_USE_DEFAULT_KEY) {
+            byte[] encodedKey = Base64.decode(firebaseStringKey, Base64.DEFAULT);
+            firebaseKey = new SecretKeySpec(encodedKey, 0, encodedKey.length, "AES");
+        }else if (type == CRYPT_USE_PASSPHRASE){
+            firebaseKey = firebasePassphraseKey;
+        }else{
+            Log.d(TAG, "Crypt: No Type defined means CRASH!");
+        }
+
     }
 
     private String encryptMain(String string){

@@ -12,27 +12,27 @@
         app:showAsAction="always"
         android:title=""/>
     <item
+        android:id="@+id/current_user"
+        android:orderInCategory="100"
+        android:title="nutzer"
+        app:showAsAction="always"/>
+    <item
         android:id="@+id/geldmanagment"
         android:title="GELDMANAGMENT"
         app:showAsAction="always"
         android:icon="@drawable/money"/>
-
     <item
         android:id="@+id/laden"
-        android:title="LADEN"
-        app:showAsAction="always"
+        android:title="Laden"
+        app:showAsAction="never"
         android:icon="@drawable/load"/>
     <item
         android:id="@+id/speichern"
-        android:title="SPEICHERN"
-        app:showAsAction="always"
+        android:title="Speichern"
+        app:showAsAction="never"
         android:icon="@drawable/save"/>
     <item
         android:id="@+id/signout"
         app:showAsAction="never"
         android:title="SignOut" />
-    <item
-        android:id="@+id/telefonNumber"
-        app:showAsAction="never"
-        android:title="WhatsAppKontakt" />
 </menu>

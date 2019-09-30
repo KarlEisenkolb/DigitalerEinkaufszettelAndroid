@@ -19,6 +19,7 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import java.util.ArrayList;
 import java.util.Locale;
 
+import static com.example.android.interaktivereinkaufszettel.Crypt.CRYPT_USE_DEFAULT_KEY;
 import static com.example.android.interaktivereinkaufszettel.MainActivity.FIRESTORE_EINKAUFSZETTEL_COLLECTION;
 
 public class CustomSpeechRecognition {
@@ -81,7 +82,7 @@ public class CustomSpeechRecognition {
                     docRef.set(new Note(matches.get(0), which_category + pos, docRef.getId()));
 
                     if (categoryNote.gibNoteColor() != Note.NOTE_NO_COLOR) {
-                        Crypt crypt = new Crypt();
+                        Crypt crypt = new Crypt(CRYPT_USE_DEFAULT_KEY);
                         collectionReference.document(categoryNote.gibId()).update(Note.NOTE_COLOR, crypt.encryptLong(Note.NOTE_NO_COLOR));
                     }
                 }

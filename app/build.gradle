@@ -4,7 +4,7 @@ android {
     compileSdkVersion 28
     defaultConfig {
         applicationId "com.example.android.interaktivereinkaufszettel"
-        minSdkVersion 26
+        minSdkVersion 28
         targetSdkVersion 28
         versionCode 1
         versionName "1.0"
@@ -37,9 +37,11 @@ dependencies {
     implementation 'com.google.firebase:firebase-firestore:21.1.1'
     implementation 'com.firebaseui:firebase-ui-firestore:4.3.2'
 
-    implementation 'com.google.firebase:firebase-auth:19.0.0' // Authentifizierung über Firebase
-    implementation 'com.google.android.gms:play-services-auth:17.0.0' // Google Play Services für Authentifizierung über GoogleAcc
+    implementation 'androidx.biometric:biometric:1.0.0-beta02'
+
+    implementation 'com.google.firebase:firebase-auth:19.1.0' // Authentifizierung über Firebase
+    implementation 'com.google.android.gms:play-services-auth:17.0.0'
+    // Google Play Services für Authentifizierung über GoogleAcc
     implementation 'com.firebaseui:firebase-ui-auth:4.3.2' // Die Auth-Ui von Google Firebase
 }
 apply plugin: 'com.google.gms.google-services'
-

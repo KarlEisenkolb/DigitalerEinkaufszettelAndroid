@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    app:layout_behavior="@string/appbar_scrolling_view_behavior">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="20dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Benutzer:"
+            android:textAppearance="@android:style/TextAppearance.Holo.Large" />
+
+        <EditText
+            android:id="@+id/nutzer_name"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="text"
+            android:hint="Benutzername"
+            android:layout_marginBottom="10dp"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Gehalt:"
+            android:textAppearance="@android:style/TextAppearance.Holo.Large" />
+
+        <EditText
+            android:id="@+id/nutzer_gehalt"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Aktuelles Monatsgehalt in €"
+            android:inputType="numberDecimal"
+            android:layout_marginBottom="10dp"/>
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recycler_view_nutzer"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                tools:listitem="@layout/note_item" />
+        </RelativeLayout>
+
+        <Button
+            android:id="@+id/nutzer_add"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_margin="20dp"
+            android:background="@drawable/buttonshape"
+            android:onClick="nutzer_add"
+            android:text="Benutzer hinzufügen" />
+
+        <Button
+            android:id="@+id/nutzer_update"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_margin="20dp"
+            android:background="@drawable/buttonshape"
+            android:onClick="nutzer_update"
+            android:text="Benutzer Updaten" />
+
+        <Button
+            android:id="@+id/nutzer_delete"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_margin="20dp"
+            android:background="@drawable/buttonshape"
+            android:onClick="nutzer_delete"
+            android:text="Benutzer löschen" />
+        <TextView
+            android:layout_marginTop="10dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Kategorienname:"
+            android:textAppearance="@android:style/TextAppearance.Holo.Large" />
+
+        <EditText
+            android:id="@+id/kategorie_name"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="text"
+            android:hint="Kategoriename"
+            android:layout_marginBottom="10dp"/>
+
+        <TextView
+            android:layout_marginTop="10dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Gruppenliste (off) / Solo (on):"
+            android:textAppearance="@android:style/TextAppearance.Holo.Large" />
+
+        <Switch
+            android:id="@+id/kategorien_switch"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="20dp"
+            android:layout_marginBottom="20dp"/>
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recycler_view_kategorien"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                tools:listitem="@layout/note_item" />
+        </RelativeLayout>
+
+        <Button
+            android:id="@+id/kategorie_add"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_margin="20dp"
+            android:background="@drawable/buttonshape"
+            android:onClick="nutzer_add"
+            android:text="Kategorie hinzufügen" />
+
+        <Button
+            android:id="@+id/kategorie_update"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_margin="20dp"
+            android:background="@drawable/buttonshape"
+            android:onClick="nutzer_update"
+            android:text="Kategorie Updaten" />
+
+        <Button
+            android:id="@+id/kategorie_delete"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_margin="20dp"
+            android:background="@drawable/buttonshape"
+            android:onClick="nutzer_delete"
+            android:text="Kategorie löschen" />
+    </LinearLayout>
+</ScrollView>

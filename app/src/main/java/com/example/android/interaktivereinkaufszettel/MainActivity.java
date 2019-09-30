@@ -2,6 +2,7 @@ package com.example.android.interaktivereinkaufszettel;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.media.AudioAttributes;
 import android.media.AudioManager;
 import android.media.SoundPool;
@@ -17,10 +18,12 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.fragment.app.FragmentActivity;
 import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.android.interaktivereinkaufszettel.geldmanagment.Geldmanagment;
 import com.firebase.ui.auth.IdpResponse;
 import com.firebase.ui.firestore.FirestoreRecyclerOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
@@ -45,7 +48,11 @@ import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.example.android.interaktivereinkaufszettel.Crypt.CRYPT_USE_DEFAULT_KEY;
 import static com.example.android.interaktivereinkaufszettel.Note.ADAPTER_POS;
+import static com.example.android.interaktivereinkaufszettel.geldmanagment.Geldmanagment.SHARED_PREF;
+import static com.example.android.interaktivereinkaufszettel.geldmanagment.Geldmanagment.SHARED_PREF_NAME;
+import static com.example.android.interaktivereinkaufszettel.geldmanagment.Geldmanagment.SHARED_PREF_NO_NUTZER;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -72,10 +79,10 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        Toolbar toolbar = findViewById(R.id.toolbar);
+        Toolbar toolbar = findViewById(R.id.toolbar_main);
         setSupportActionBar(toolbar);
 
-        crypt = new Crypt();
+        crypt = new Crypt(CRYPT_USE_DEFAULT_KEY);
         securityHandling = new CustomFirebaseSecurityHandling(this);
 
         final CustomSpeechRecognition customSpeechRecognition = new CustomSpeechRecognition(this);
@@ -333,6 +340,13 @@ public class MainActivity extends AppCompatActivity {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_main, menu);
         this.menu = menu;
+
+        final SharedPreferences sharedPreferences = getSharedPreferences(SHARED_PREF, MODE_PRIVATE);
+        String currentNutzer = sharedPreferences.getString(SHARED_PREF_NAME, SHARED_PREF_NO_NUTZER);
+
+        MenuItem nutzer = menu.findItem(R.id.current_user);
+        Crypt crypt = new Crypt(CRYPT_USE_DEFAULT_KEY);
+        nutzer.setTitle(crypt.decryptString(currentNutzer));
         return true;
     }
 
@@ -399,7 +413,15 @@ public class MainActivity extends AppCompatActivity {
 
         }
         if (id == R.id.geldmanagment) {
-
+            FragmentActivity mainActivity = this;
+            new CustomFingerprintSecurityHandling(mainActivity, new CustomFingerprintSecurityHandling.FingerprintSuccessListener() {
+                @Override
+                public void onFingerprintSuccess() {
+                    Intent intent = new Intent(MainActivity.this, Geldmanagment.class);
+                    //intent.putExtra(PASSPHRASE, passphrase);
+                    startActivity(intent);
+                }
+            });
             return true;
         }
         if (id == R.id.signout) {
