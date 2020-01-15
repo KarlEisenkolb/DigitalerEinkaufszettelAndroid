@@ -96,6 +96,16 @@
             android:layout_marginBottom="10dp"/>
 
         <TextView
+            android:id="@+id/kategorie_owner"
+            android:background="#FAFAFA"
+            android:fontFamily="sans-serif-medium"
+            android:textSize="17sp"
+            android:layout_gravity="center_horizontal"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text=""/>
+
+        <TextView
             android:layout_marginTop="10dp"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -128,7 +138,7 @@
             android:layout_gravity="center_horizontal"
             android:layout_margin="20dp"
             android:background="@drawable/buttonshape"
-            android:onClick="nutzer_add"
+            android:onClick="category_add"
             android:text="Kategorie hinzufügen" />
 
         <Button
@@ -138,7 +148,7 @@
             android:layout_gravity="center_horizontal"
             android:layout_margin="20dp"
             android:background="@drawable/buttonshape"
-            android:onClick="nutzer_update"
+            android:onClick="category_update"
             android:text="Kategorie Updaten" />
 
         <Button
@@ -148,7 +158,7 @@
             android:layout_gravity="center_horizontal"
             android:layout_margin="20dp"
             android:background="@drawable/buttonshape"
-            android:onClick="nutzer_delete"
+            android:onClick="category_delete"
             android:text="Kategorie löschen" />
     </LinearLayout>
 </ScrollView>

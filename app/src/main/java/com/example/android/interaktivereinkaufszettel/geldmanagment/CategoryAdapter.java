@@ -13,33 +13,32 @@ import com.example.android.interaktivereinkaufszettel.R;
 import com.firebase.ui.firestore.FirestoreRecyclerAdapter;
 import com.firebase.ui.firestore.FirestoreRecyclerOptions;
 
-public class NutzerAdapter extends FirestoreRecyclerAdapter<Nutzer, RecyclerView.ViewHolder> {
-    private NutzerAdapter.OnItemClickListener listener;
-    private final String TAG = "NutzerAdapterDebug";
-    public NutzerAdapter(@NonNull FirestoreRecyclerOptions<Nutzer> options) {
-        super(options);
-    }
+public class CategoryAdapter extends FirestoreRecyclerAdapter<Category, RecyclerView.ViewHolder> {
+    private CategoryAdapter.OnItemClickListener listener;
+    private final String TAG = "CategoryAdapterDebug";
+    public CategoryAdapter(@NonNull FirestoreRecyclerOptions<Category> options) { super(options);
+        Log.d(TAG, "CategoryAdapter: ");}
 
     @NonNull
     @Override
-    public NutzerAdapter.NutzerHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+    public CategoryAdapter.CategoryHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View itemView = LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.nutzer_item, parent, false);
         Log.d(TAG, "onCreateViewHolder: ");
-        return new NutzerAdapter.NutzerHolder(itemView);
+        return new CategoryAdapter.CategoryHolder(itemView);
     }
 
     @Override
-    protected void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position, @NonNull Nutzer nutzer) {
-        ((NutzerHolder) holder).nutzerView.setText(nutzer.gibName());
+    protected void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position, @NonNull Category category) {
+        ((CategoryHolder) holder).categoryNameView.setText(category.gibName());
     }
 
-    class NutzerHolder extends RecyclerView.ViewHolder {
-        private TextView nutzerView;
+    class CategoryHolder extends RecyclerView.ViewHolder {
+        private TextView categoryNameView;
 
-        public NutzerHolder(View itemView) {
+        public CategoryHolder(View itemView) {
             super(itemView);
-            nutzerView = itemView.findViewById(R.id.nutzer);
+            categoryNameView = itemView.findViewById(R.id.nutzer);
 
             itemView.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -54,10 +53,10 @@ public class NutzerAdapter extends FirestoreRecyclerAdapter<Nutzer, RecyclerView
     }
 
     public interface OnItemClickListener {
-        void onItemClick(Nutzer nutzer);
+        void onItemClick(Category category);
     }
 
-    public void setOnItemClickListener(NutzerAdapter.OnItemClickListener listener) {
+    public void setOnItemClickListener(CategoryAdapter.OnItemClickListener listener) {
         this.listener = listener;
     }
 

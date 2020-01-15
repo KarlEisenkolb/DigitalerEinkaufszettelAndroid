@@ -35,7 +35,7 @@ public class Crypt {
     final public static int CRYPT_USE_PASSPHRASE = 1;
 
     final String TAG = "Crypt.Class";
-    private final String firebaseStringKey = "oChvIXgFu9BqlaujP/0aT7j8WC/c02KuQxRnNmAwq5k="; // Hier neuen Key einfüge
+    private final String firebaseStringKey = "oChvIXgFu9BqlaujP/0aT7j8WC/c02KuQxRnNmAwq5k="; // Hier neuen Key einfügen
     private SecretKey firebaseKey;
     private static SecretKey firebasePassphraseKey;
 
@@ -112,7 +112,7 @@ public class Crypt {
             decryptedString = new String( decryptedStringBytes);
         } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidAlgorithmParameterException | InvalidKeyException | BadPaddingException | IllegalBlockSizeException e) {
             e.printStackTrace();
-            Log.d(TAG, "decryptString: Try-Catch Failed!: "+e.getMessage());
+            Log.d("Crypt.Class.FAIL", "decryptString: Try-Catch Failed!: "+e.getMessage());
         }
         return decryptedString;
     }

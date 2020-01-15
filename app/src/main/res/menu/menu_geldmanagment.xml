@@ -4,11 +4,6 @@
     tools:context="com.example.android.interaktivereinkaufszettel.MainActivity">
 
     <item
-        android:id="@+id/item_counter"
-        android:orderInCategory="100"
-        app:showAsAction="always"
-        android:title="34"/>
-    <item
         android:id="@+id/current_user"
         android:orderInCategory="100"
         android:title=""
@@ -17,7 +12,8 @@
         android:id="@+id/kontostand"
         android:orderInCategory="100"
         app:showAsAction="always"
-        android:title="-300€"/>
+        android:title=""
+        android:icon="@drawable/calculate"/>
     <item
         android:id="@+id/print"
         app:showAsAction="never"

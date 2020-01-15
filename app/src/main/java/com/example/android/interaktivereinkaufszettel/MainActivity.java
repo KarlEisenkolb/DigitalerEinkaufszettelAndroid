@@ -24,6 +24,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.android.interaktivereinkaufszettel.geldmanagment.Geldmanagment;
+import com.example.android.interaktivereinkaufszettel.geldmanagment.PassphrasenDialog;
 import com.firebase.ui.auth.IdpResponse;
 import com.firebase.ui.firestore.FirestoreRecyclerOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
@@ -49,7 +50,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static com.example.android.interaktivereinkaufszettel.Crypt.CRYPT_USE_DEFAULT_KEY;
+import static com.example.android.interaktivereinkaufszettel.CustomFingerprintSecurityHandling.PASSPHRASE;
 import static com.example.android.interaktivereinkaufszettel.Note.ADAPTER_POS;
+import static com.example.android.interaktivereinkaufszettel.geldmanagment.Geldmanagment.FIRESTORE_EINKAUFSZETTEL_BILL_COLLECTION;
 import static com.example.android.interaktivereinkaufszettel.geldmanagment.Geldmanagment.SHARED_PREF;
 import static com.example.android.interaktivereinkaufszettel.geldmanagment.Geldmanagment.SHARED_PREF_NAME;
 import static com.example.android.interaktivereinkaufszettel.geldmanagment.Geldmanagment.SHARED_PREF_NO_NUTZER;
@@ -142,6 +145,9 @@ public class MainActivity extends AppCompatActivity {
         //===================================================================================================================================================
         //Einkaufsfortschritt im Menü darstellen
         //===================================================================================================================================================
+        FirebaseAuth auth = FirebaseAuth.getInstance();
+        if (auth.getCurrentUser() != null) {
+            // already signed in. Der EventListener ist leider abgestürzt ohne vorhandenen Login
         collectionReference.addSnapshotListener(new EventListener<QuerySnapshot>() {
             @Override
             public void onEvent(@Nullable QuerySnapshot snapshots, @Nullable FirebaseFirestoreException e) {
@@ -199,7 +205,7 @@ public class MainActivity extends AppCompatActivity {
                 else
                     progress.setTitle(format.format(((double) green_counter / (double) size) * 100) + "%");
             }
-        });
+        });}
 
         //===================================================================================================================================================
         //Adapter Funktionalitäten
@@ -281,34 +287,46 @@ public class MainActivity extends AppCompatActivity {
         fab_done.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                final SharedPreferences sharedPreferences = getSharedPreferences(SHARED_PREF, MODE_PRIVATE);
+                final String currentNutzerToCheck = sharedPreferences.getString(SHARED_PREF_NAME, SHARED_PREF_NO_NUTZER);
 
-                final List<Note> notesGreen = new ArrayList<>();
-                WriteBatch batch = firebaseFirestore.batch();
+                if (currentNutzerToCheck.equals(SHARED_PREF_NO_NUTZER)) {
+                    Snackbar.make(fab_done, "Nutzer auswählen oder erstellen", Snackbar.LENGTH_LONG);
+                } else {
+                    final String currentNutzer = crypt.decryptString(currentNutzerToCheck);
+                    final List<Note> notesGreen = new ArrayList<>();
+                    final WriteBatch batch = firebaseFirestore.batch();
+                    soundPool.play(finishSound, 0.2F, 0.2F, 0, 0, 1);
 
-                soundPool.play(finishSound, 0.2F, 0.2F, 0, 0, 1);
-
-                for (Note currentNote : adapter.getSnapshots()) {
-                    if (currentNote.gibNoteColor() == Note.NOTE_COLOR_GREEN && currentNote.gibType() == Note.NOTE) {
-                        batch.delete(collectionReference.document(currentNote.gibId()));
-                        notesGreen.add(currentNote);
-                    }
-                    if (currentNote.gibNoteColor() == Note.NOTE_COLOR_GREEN && currentNote.gibType() == Note.CATEGORY)
-                        batch.update(collectionReference.document(currentNote.gibId()), Note.NOTE_COLOR, crypt.encryptLong(Note.NOTE_NO_COLOR));
-                }
-                batch.commit();
-
-
-                Snackbar.make(fab_done, "Alle Erledigten gelöscht!", Snackbar.LENGTH_LONG)
-                        .setAction("UNDO", new View.OnClickListener() {
-                            @Override
-                            public void onClick(View view) {
-                                soundPool.play(undoSound, 0.1F, 0.1F, 0, 0, 1);
-                                WriteBatch batch = firebaseFirestore.batch();
-                                for (Note note : notesGreen)
-                                    batch.set(collectionReference.document(note.gibId()), note);
-                                batch.commit();
+                    NewEinkaufFinishedDialog rechnungDialog = NewEinkaufFinishedDialog.newInstance(currentNutzer, new NewEinkaufFinishedDialog.OnDialogFinishedListener() {
+                        @Override
+                        public void onDialogFinished(final DocumentReference docRefOfAddedRechnung) {
+                            for (Note currentNote : adapter.getSnapshots()) {
+                                if (currentNote.gibNoteColor() == Note.NOTE_COLOR_GREEN && currentNote.gibType() == Note.NOTE) {
+                                    batch.delete(collectionReference.document(currentNote.gibId()));
+                                    notesGreen.add(currentNote);
+                                }
+                                if (currentNote.gibNoteColor() == Note.NOTE_COLOR_GREEN && currentNote.gibType() == Note.CATEGORY)
+                                    batch.update(collectionReference.document(currentNote.gibId()), Note.NOTE_COLOR, crypt.encryptLong(Note.NOTE_NO_COLOR));
                             }
-                        }).show();
+                            batch.commit();
+                            Snackbar.make(fab_done, "Alle Erledigten gelöscht!", Snackbar.LENGTH_LONG)
+                                    .setAction("UNDO", new View.OnClickListener() {
+                                        @Override
+                                        public void onClick(View view) {
+                                            soundPool.play(undoSound, 0.1F, 0.1F, 0, 0, 1);
+                                            WriteBatch batch = firebaseFirestore.batch();
+                                            for (Note note : notesGreen)
+                                                batch.set(collectionReference.document(note.gibId()), note);
+                                            CollectionReference collectionEinkaufszettelBillReference = firebaseFirestore.collection(FIRESTORE_EINKAUFSZETTEL_BILL_COLLECTION);
+                                            batch.delete(collectionEinkaufszettelBillReference.document(docRefOfAddedRechnung.getId()));
+                                            batch.commit();
+                                        }
+                                    }).show();
+                        }
+                    });
+                    rechnungDialog.show(getSupportFragmentManager(), "EinkaufFinishedDialog");
+                }
             }
         });
 
@@ -345,8 +363,11 @@ public class MainActivity extends AppCompatActivity {
         String currentNutzer = sharedPreferences.getString(SHARED_PREF_NAME, SHARED_PREF_NO_NUTZER);
 
         MenuItem nutzer = menu.findItem(R.id.current_user);
-        Crypt crypt = new Crypt(CRYPT_USE_DEFAULT_KEY);
-        nutzer.setTitle(crypt.decryptString(currentNutzer));
+        if (!currentNutzer.equals(SHARED_PREF_NO_NUTZER)){
+            Crypt crypt = new Crypt(CRYPT_USE_DEFAULT_KEY);
+            nutzer.setTitle(crypt.decryptString(currentNutzer));
+        }else
+            nutzer.setTitle(currentNutzer);
         return true;
     }
 
@@ -413,15 +434,22 @@ public class MainActivity extends AppCompatActivity {
 
         }
         if (id == R.id.geldmanagment) {
-            FragmentActivity mainActivity = this;
-            new CustomFingerprintSecurityHandling(mainActivity, new CustomFingerprintSecurityHandling.FingerprintSuccessListener() {
-                @Override
-                public void onFingerprintSuccess() {
-                    Intent intent = new Intent(MainActivity.this, Geldmanagment.class);
-                    //intent.putExtra(PASSPHRASE, passphrase);
-                    startActivity(intent);
-                }
-            });
+
+            //Die Eingabe der Passwortes wurde ausgeklammert weil zu umständlich zu bedienen
+
+            /*PassphrasenDialog passphrasenDialog = PassphrasenDialog.newInstance(MainActivity.this, new PassphrasenDialog.OnDialogFinishedListener() {
+                       @Override
+                       public void onDialogFinished(String passphrase) {
+                           Intent intent = new Intent(MainActivity.this, Geldmanagment.class);
+                           intent.putExtra(PASSPHRASE, passphrase);
+                           startActivity(intent);
+                       }
+                   });
+                   passphrasenDialog.show(getSupportFragmentManager(), "PassphrasenDialog");*/
+
+            Intent intent = new Intent(MainActivity.this, Geldmanagment.class);
+            intent.putExtra(PASSPHRASE, "gus321butzel0");
+            startActivity(intent);
             return true;
         }
         if (id == R.id.signout) {

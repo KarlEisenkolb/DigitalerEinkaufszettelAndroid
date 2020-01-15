@@ -18,7 +18,7 @@ public class PassphrasenDialog extends DialogFragment {
 
     private static final String TAG = "fingerprintTest";
     OnDialogFinishedListener listener;
-    Activity mainActivity;
+    Activity activity;
 
     public static PassphrasenDialog newInstance(Activity mainActivity, OnDialogFinishedListener listener) {
         PassphrasenDialog f = new PassphrasenDialog();
@@ -28,7 +28,7 @@ public class PassphrasenDialog extends DialogFragment {
     }
 
     public void setMainActivity(Activity mainActivity) {
-        this.mainActivity = mainActivity;
+        this.activity = mainActivity;
     }
 
     private void setOnDialogFinishedListener(OnDialogFinishedListener listener){
@@ -65,14 +65,12 @@ public class PassphrasenDialog extends DialogFragment {
                         if (isNotEmpty(editText))
                             listener.onDialogFinished(editText.getText().toString());
                         else{
-                            Toast.makeText(mainActivity, "Leere Passphrase", Toast.LENGTH_LONG).show();
-                            mainActivity.finish();
+                            Toast.makeText(activity, "Leere Passphrase", Toast.LENGTH_LONG).show();
                         }
                     }
                 })
                 .setNegativeButton("Abbruch", new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int id) {
-                        mainActivity.finish();
                     }
                 });
         // Create the AlertDialog object and return it
@@ -80,9 +78,7 @@ public class PassphrasenDialog extends DialogFragment {
     }
 
     @Override
-    public void onCancel(DialogInterface dialog) {
-        mainActivity.finish();
-    }
+    public void onCancel(DialogInterface dialog) {}
 
     private boolean isNotEmpty(EditText view) {
         return view.getText().toString().trim().length() != 0;

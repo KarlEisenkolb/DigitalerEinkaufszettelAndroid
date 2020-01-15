@@ -7,29 +7,36 @@ import static com.example.android.interaktivereinkaufszettel.Crypt.CRYPT_USE_PAS
 
 public class Rechnung {
 
-    static final String CONTENT     = "kd9G2nFs8Js";
-    static final String KAUEFER     = "o8VsZ37Mdg6";
-    static final String KATEGORIE   = "zF2mdPsV3j5";
-    static final String PREIS       = "pY2md6KeutM";
-    static final String DATUM       = "uB2ksp24bsP";
-    static final String ID          = "sM43hs2G49n";
+    public static final long RECHNUNG_GEKAUFT = 0;
+    public static final long RECHNUNG_GEPLANT = 1;
+    public static final long RECHNUNG_ZAHLUNG = 2;
+
+    public static final String CONTENT     = "kd9G2nFs8Js";
+    public static final String KAUEFER     = "o8VsZ37Mdg6";
+    public static final String KATEGORIE   = "zF2mdPsV3j5";
+    public static final String PREIS       = "pY2md6KeutM";
+    public static final String DATUM       = "uB2ksp24bsP";
+    public static final String TYPE        = "fiJ7Dn2m63d";
+    public static final String ID          = "sM43hs2G49n";
 
     private String kd9G2nFs8Js; // Content
     private String o8VsZ37Mdg6; // Kauefer
     private String zF2mdPsV3j5; // Kategorie
     private String pY2md6KeutM; // Preis
-    private String uB2ksp24bsP; // Datum
+    private long   uB2ksp24bsP; // Datum
+    private String fiJ7Dn2m63d; // Type
     private String sM43hs2G49n; // Id
 
     public Rechnung(){}
 
-    public Rechnung(String content, String kauefer, String kategorie, Double preis, long datum, String id){
+    public Rechnung(String content, String kauefer, String kategorie, Double preis, long datum, long type, String id){
         Crypt crypt = new Crypt(CRYPT_USE_DEFAULT_KEY);
         this.kd9G2nFs8Js = crypt.encryptString(content);
         this.o8VsZ37Mdg6 = crypt.encryptString(kauefer);
         this.zF2mdPsV3j5 = crypt.encryptString(kategorie);
         this.pY2md6KeutM = crypt.encryptDouble(preis);
-        this.uB2ksp24bsP = crypt.encryptLong(datum);
+        this.uB2ksp24bsP = datum;
+        this.fiJ7Dn2m63d = crypt.encryptLong(type);
         this.sM43hs2G49n = crypt.encryptString(id);
     }
 
@@ -37,7 +44,8 @@ public class Rechnung {
     public String geto8VsZ37Mdg6() { return o8VsZ37Mdg6; }
     public String getzF2mdPsV3j5() { return zF2mdPsV3j5; }
     public String getpY2md6KeutM() { return pY2md6KeutM; }
-    public String getuB2ksp24bsP() { return uB2ksp24bsP; }
+    public long   getuB2ksp24bsP() { return uB2ksp24bsP; }
+    public String getfiJ7Dn2m63d() { return fiJ7Dn2m63d; }
     public String getsM43hs2G49n() { return sM43hs2G49n; }
 
     public String gibContent() {
@@ -46,12 +54,12 @@ public class Rechnung {
     }
 
     public String gibKauefer() {
-        Crypt crypt = new Crypt(CRYPT_USE_PASSPHRASE);
+        Crypt crypt = new Crypt(CRYPT_USE_DEFAULT_KEY);
         return crypt.decryptString(geto8VsZ37Mdg6());
     }
 
     public String gibKategorie() {
-        Crypt crypt = new Crypt(CRYPT_USE_PASSPHRASE);
+        Crypt crypt = new Crypt(CRYPT_USE_DEFAULT_KEY);
         return crypt.decryptString(getzF2mdPsV3j5());
     }
 
@@ -61,8 +69,12 @@ public class Rechnung {
     }
 
     public long gibDatum() {
+        return getuB2ksp24bsP();
+    }
+
+    public long gibType() {
         Crypt crypt = new Crypt(CRYPT_USE_DEFAULT_KEY);
-        return crypt.decryptLong(getuB2ksp24bsP());
+        return crypt.decryptLong(getfiJ7Dn2m63d());
     }
 
     public String gibId() {
@@ -76,12 +88,12 @@ public class Rechnung {
     }
 
     public void setzeKauefer(String kauefer) {
-        Crypt crypt = new Crypt(CRYPT_USE_PASSPHRASE);
+        Crypt crypt = new Crypt(CRYPT_USE_DEFAULT_KEY);
         this.o8VsZ37Mdg6 = crypt.encryptString(kauefer);
     }
 
     public void setzeKategorie(String kategorie) {
-        Crypt crypt = new Crypt(CRYPT_USE_PASSPHRASE);
+        Crypt crypt = new Crypt(CRYPT_USE_DEFAULT_KEY);
         this.zF2mdPsV3j5 = crypt.encryptString(kategorie);
     }
 
@@ -91,8 +103,12 @@ public class Rechnung {
     }
 
     public void setzeDatum(long datum) {
+        this.uB2ksp24bsP = datum;
+    }
+
+    public void setzeType(long type) {
         Crypt crypt = new Crypt(CRYPT_USE_DEFAULT_KEY);
-        this.uB2ksp24bsP = crypt.encryptLong(datum);
+        this.fiJ7Dn2m63d = crypt.encryptLong(type);
     }
 
     public void setzeId(String id) {

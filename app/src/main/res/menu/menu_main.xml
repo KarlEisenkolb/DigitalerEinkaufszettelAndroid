@@ -20,7 +20,7 @@
         android:id="@+id/geldmanagment"
         android:title="GELDMANAGMENT"
         app:showAsAction="always"
-        android:icon="@drawable/money"/>
+        android:icon="@drawable/money2"/>
     <item
         android:id="@+id/laden"
         android:title="Laden"

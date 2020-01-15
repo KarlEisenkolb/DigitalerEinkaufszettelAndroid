@@ -10,11 +10,29 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical">
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="2dp"
+            android:background="@color/colorPrimary"/>
+
+        <TextView
+            android:id="@+id/solo_or_grouplist"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text=""
+            android:padding="5dp"
+            android:fontFamily="sans-serif-medium"
+            android:gravity="center"
+            android:textAllCaps="true"
+            android:textColor="@android:color/white"
+            android:background="@color/colorAccent"/>
+
         <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
             <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/recycler_view_geldmanagment"
+                android:id="@+id/recycler_view_rechnungen"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content" />
         </RelativeLayout>
