@@ -14,6 +14,7 @@ import com.firebase.ui.firestore.FirestoreRecyclerOptions;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.recyclerview.widget.SimpleItemAnimator;
 
 public class NoteAdapter extends FirestoreRecyclerAdapter<Note, RecyclerView.ViewHolder> {
 

@@ -13,18 +13,14 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toast;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
-import androidx.fragment.app.FragmentActivity;
 import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-
 import com.example.android.interaktivereinkaufszettel.geldmanagment.Geldmanagment;
-import com.example.android.interaktivereinkaufszettel.geldmanagment.PassphrasenDialog;
 import com.firebase.ui.auth.IdpResponse;
 import com.firebase.ui.firestore.FirestoreRecyclerOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
@@ -44,11 +40,10 @@ import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.firestore.WriteBatch;
-
 import java.text.DecimalFormat;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
-
 import static com.example.android.interaktivereinkaufszettel.Crypt.CRYPT_USE_DEFAULT_KEY;
 import static com.example.android.interaktivereinkaufszettel.CustomFingerprintSecurityHandling.PASSPHRASE;
 import static com.example.android.interaktivereinkaufszettel.Note.ADAPTER_POS;
@@ -215,6 +210,7 @@ public class MainActivity extends AppCompatActivity {
                 .build();
 
         recyclerView = findViewById(R.id.recycler_view);
+        recyclerView.getItemAnimator().setChangeDuration(0); // Removes blinks
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         recyclerView.setNestedScrollingEnabled(false);
         adapter = new NoteAdapter(options, this);
@@ -435,9 +431,7 @@ public class MainActivity extends AppCompatActivity {
         }
         if (id == R.id.geldmanagment) {
 
-            //Die Eingabe der Passwortes wurde ausgeklammert weil zu umständlich zu bedienen
-
-            /*PassphrasenDialog passphrasenDialog = PassphrasenDialog.newInstance(MainActivity.this, new PassphrasenDialog.OnDialogFinishedListener() {
+            /*PassphrasenDialog passphrasenDialog = PassphrasenDialog.newInstance(MainActivity.this, new PassphrasenDialog.OnDialogFinishedListener() {         //Die Eingabe der Passwortes wurde ausgeklammert weil zu umständlich zu bedienen
                        @Override
                        public void onDialogFinished(String passphrase) {
                            Intent intent = new Intent(MainActivity.this, Geldmanagment.class);
@@ -447,9 +441,14 @@ public class MainActivity extends AppCompatActivity {
                    });
                    passphrasenDialog.show(getSupportFragmentManager(), "PassphrasenDialog");*/
 
-            Intent intent = new Intent(MainActivity.this, Geldmanagment.class);
-            intent.putExtra(PASSPHRASE, "gus321butzel0");
-            startActivity(intent);
+            new CustomFingerprintSecurityHandling(this, new CustomFingerprintSecurityHandling.FingerprintSuccessListener() {
+                @Override
+                public void onFingerprintSuccess() {
+                    Intent intent = new Intent(MainActivity.this, Geldmanagment.class);
+                    intent.putExtra(PASSPHRASE, "gus321butzel0");
+                    startActivity(intent);
+                }
+            });
             return true;
         }
         if (id == R.id.signout) {
