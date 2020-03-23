@@ -41,7 +41,6 @@ import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.firestore.WriteBatch;
 import java.text.DecimalFormat;
-import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import static com.example.android.interaktivereinkaufszettel.Crypt.CRYPT_USE_DEFAULT_KEY;

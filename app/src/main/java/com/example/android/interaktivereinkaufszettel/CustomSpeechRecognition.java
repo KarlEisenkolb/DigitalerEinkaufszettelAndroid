@@ -36,6 +36,8 @@ public class CustomSpeechRecognition {
                 RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
         mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE,
                 Locale.getDefault());
+        mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_PREFER_OFFLINE,
+                true);
 
         mSpeechRecognizer.setRecognitionListener(new RecognitionListener() {
             @Override
