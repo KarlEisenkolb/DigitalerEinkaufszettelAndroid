@@ -1,4 +1,4 @@
-package com.example.android.interaktivereinkaufszettel.geldmanagment;
+package com.example.android.interaktivereinkaufszettel.Geldmanagment;
 
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -13,7 +13,11 @@ import android.widget.EditText;
 import android.widget.Switch;
 import android.widget.TextView;
 
-import com.example.android.interaktivereinkaufszettel.Crypt;
+import com.example.android.interaktivereinkaufszettel.ModelsAndAdapters.CategoryAdapter;
+import com.example.android.interaktivereinkaufszettel.ModelsAndAdapters.Nutzer;
+import com.example.android.interaktivereinkaufszettel.ModelsAndAdapters.NutzerAdapter;
+import com.example.android.interaktivereinkaufszettel.Security.Crypt;
+import com.example.android.interaktivereinkaufszettel.ModelsAndAdapters.Category;
 import com.example.android.interaktivereinkaufszettel.R;
 import com.firebase.ui.firestore.FirestoreRecyclerOptions;
 import com.google.android.material.snackbar.Snackbar;
@@ -22,18 +26,17 @@ import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.WriteBatch;
 
-import static com.example.android.interaktivereinkaufszettel.Crypt.CRYPT_USE_DEFAULT_KEY;
-import static com.example.android.interaktivereinkaufszettel.Crypt.CRYPT_USE_PASSPHRASE;
-import static com.example.android.interaktivereinkaufszettel.geldmanagment.Category.CATEGORY_GROUP_LIST;
-import static com.example.android.interaktivereinkaufszettel.geldmanagment.Category.CATEGORY_SOLO_LIST;
-import static com.example.android.interaktivereinkaufszettel.geldmanagment.Geldmanagment.FIRESTORE_CATEGORY_COLLECTION;
-import static com.example.android.interaktivereinkaufszettel.geldmanagment.Geldmanagment.SHARED_PREF_NAME;
-import static com.example.android.interaktivereinkaufszettel.geldmanagment.Geldmanagment.SHARED_PREF_NO_NUTZER;
-import static com.example.android.interaktivereinkaufszettel.geldmanagment.Nutzer.ID;
-import static com.example.android.interaktivereinkaufszettel.geldmanagment.Nutzer.NAME;
-import static com.example.android.interaktivereinkaufszettel.geldmanagment.Geldmanagment.FIRESTORE_NUTZER_COLLECTION;
-import static com.example.android.interaktivereinkaufszettel.geldmanagment.Geldmanagment.PASSPHRASE;
-import static com.example.android.interaktivereinkaufszettel.geldmanagment.Geldmanagment.SHARED_PREF;
+import static com.example.android.interaktivereinkaufszettel.Security.Crypt.CRYPT_USE_DEFAULT_KEY;
+import static com.example.android.interaktivereinkaufszettel.Security.Crypt.CRYPT_USE_PASSPHRASE;
+import static com.example.android.interaktivereinkaufszettel.ModelsAndAdapters.Category.CATEGORY_GROUP_LIST;
+import static com.example.android.interaktivereinkaufszettel.ModelsAndAdapters.Category.CATEGORY_SOLO_LIST;
+import static com.example.android.interaktivereinkaufszettel.Geldmanagment.Geldmanagment.FIRESTORE_CATEGORY_COLLECTION;
+import static com.example.android.interaktivereinkaufszettel.Geldmanagment.Geldmanagment.SHARED_PREF_NAME;
+import static com.example.android.interaktivereinkaufszettel.Geldmanagment.Geldmanagment.SHARED_PREF_NO_NUTZER;
+import static com.example.android.interaktivereinkaufszettel.ModelsAndAdapters.Nutzer.ID;
+import static com.example.android.interaktivereinkaufszettel.ModelsAndAdapters.Nutzer.NAME;
+import static com.example.android.interaktivereinkaufszettel.Geldmanagment.Geldmanagment.FIRESTORE_NUTZER_COLLECTION;
+import static com.example.android.interaktivereinkaufszettel.Geldmanagment.Geldmanagment.SHARED_PREF;
 
 public class AddEditNutzerAndLists extends AppCompatActivity {
 

@@ -1,4 +1,4 @@
-package com.example.android.interaktivereinkaufszettel;
+package com.example.android.interaktivereinkaufszettel.Security;
 
 import android.util.Log;
 
@@ -12,8 +12,8 @@ import java.util.concurrent.Executors;
 
 public class CustomFingerprintSecurityHandling {
 
-    final static String PASSPHRASE = "passphrase";
-    final static int RC_SIGN_IN = 0;
+    public final static String PASSPHRASE = "passphrase";
+    public final static int RC_SIGN_IN = 0;
     private static final String TAG = "fingerprintTest";
 
     public interface FingerprintSuccessListener{

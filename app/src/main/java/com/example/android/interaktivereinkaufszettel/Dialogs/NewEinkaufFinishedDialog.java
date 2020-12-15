@@ -1,4 +1,4 @@
-package com.example.android.interaktivereinkaufszettel;
+package com.example.android.interaktivereinkaufszettel.Dialogs;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -15,7 +15,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.DialogFragment;
 
-import com.example.android.interaktivereinkaufszettel.geldmanagment.Rechnung;
+import com.example.android.interaktivereinkaufszettel.ModelsAndAdapters.Rechnung;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.firestore.CollectionReference;
@@ -23,11 +23,11 @@ import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 import static android.content.Context.MODE_PRIVATE;
-import static com.example.android.interaktivereinkaufszettel.geldmanagment.Geldmanagment.FIRESTORE_EINKAUFSZETTEL_BILL_COLLECTION;
-import static com.example.android.interaktivereinkaufszettel.geldmanagment.Geldmanagment.FIRESTORE_EINKAUFSZETTEL_CATEGORY_NAME;
-import static com.example.android.interaktivereinkaufszettel.geldmanagment.Geldmanagment.SHARED_PREF;
-import static com.example.android.interaktivereinkaufszettel.geldmanagment.Geldmanagment.SHARED_PREF_STANDARD_EINKAUFSNAME;
-import static com.example.android.interaktivereinkaufszettel.geldmanagment.Rechnung.RECHNUNG_GEKAUFT;
+import static com.example.android.interaktivereinkaufszettel.Geldmanagment.Geldmanagment.FIRESTORE_EINKAUFSZETTEL_BILL_COLLECTION;
+import static com.example.android.interaktivereinkaufszettel.Geldmanagment.Geldmanagment.FIRESTORE_EINKAUFSZETTEL_CATEGORY_NAME;
+import static com.example.android.interaktivereinkaufszettel.Geldmanagment.Geldmanagment.SHARED_PREF;
+import static com.example.android.interaktivereinkaufszettel.Geldmanagment.Geldmanagment.SHARED_PREF_STANDARD_EINKAUFSNAME;
+import static com.example.android.interaktivereinkaufszettel.ModelsAndAdapters.Rechnung.RECHNUNG_GEKAUFT;
 
 public class NewEinkaufFinishedDialog extends DialogFragment {
 
@@ -35,15 +35,15 @@ public class NewEinkaufFinishedDialog extends DialogFragment {
     private int modus;
     private CollectionReference collectionEinkaufszettelBillReference;
     private String nutzerUndKauefer;
-    private String kategorieName;
-    private long kategorieType;
+    private Double currentNutzerGehaltsanteil;
     private Rechnung rechnung;
 
-    public static NewEinkaufFinishedDialog newInstance(String nutzerUndKauefer, OnDialogFinishedListener onDialogFinishedListener) {
+    public static NewEinkaufFinishedDialog newInstance(String nutzerUndKauefer, Double currentNutzerGehaltsanteil, OnDialogFinishedListener onDialogFinishedListener) {
         NewEinkaufFinishedDialog f = new NewEinkaufFinishedDialog();
         f.setOnDialogFinishedListener(onDialogFinishedListener);
         Bundle bundle = new Bundle();
         bundle.putString(Rechnung.KAUEFER, nutzerUndKauefer);
+        bundle.putDouble(Rechnung.KAUEFER_GEHALTSANTEIL, currentNutzerGehaltsanteil);
         f.setArguments(bundle);
         return f;
     }
@@ -69,7 +69,8 @@ public class NewEinkaufFinishedDialog extends DialogFragment {
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
         // Use the Builder class for convenient dialog construction
-        nutzerUndKauefer = getArguments().getString(Rechnung.KAUEFER); // Für Hinzufügen
+        nutzerUndKauefer            = getArguments().getString(Rechnung.KAUEFER); // Für Hinzufügen
+        currentNutzerGehaltsanteil  = getArguments().getDouble(Rechnung.KAUEFER_GEHALTSANTEIL);
 
         FirebaseFirestore firebaseFirestore = FirebaseFirestore.getInstance();
         collectionEinkaufszettelBillReference = firebaseFirestore.collection(FIRESTORE_EINKAUFSZETTEL_BILL_COLLECTION); // Für Hinzufügen/Updaten/Löschen
@@ -114,7 +115,15 @@ public class NewEinkaufFinishedDialog extends DialogFragment {
                         public void onClick(DialogInterface dialog, int id) {
                             final DocumentReference docRef = collectionEinkaufszettelBillReference.document();
                             if (isNotEmpty(editPreisText) && isNotEmpty(editContentText))
-                                docRef.set(new Rechnung(editContentText.getText().toString(), nutzerUndKauefer, FIRESTORE_EINKAUFSZETTEL_CATEGORY_NAME, Double.valueOf(editPreisText.getText().toString()), System.currentTimeMillis(), RECHNUNG_GEKAUFT, docRef.getId())).addOnCompleteListener(new OnCompleteListener<Void>() {
+                                docRef.set(new Rechnung(editContentText.getText().toString(),
+                                                        nutzerUndKauefer,
+                                                        FIRESTORE_EINKAUFSZETTEL_CATEGORY_NAME,
+                                                        Double.valueOf(editPreisText.getText().toString()),
+                                                        currentNutzerGehaltsanteil,
+                                                        System.currentTimeMillis(),
+                                                        RECHNUNG_GEKAUFT,
+                                                        docRef.getId()
+                                )).addOnCompleteListener(new OnCompleteListener<Void>() {
                                     @Override
                                     public void onComplete(@NonNull Task<Void> task) {
                                         SharedPreferences.Editor editor = sharedPreferences.edit();

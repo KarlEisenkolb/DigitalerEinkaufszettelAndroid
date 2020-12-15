@@ -1,4 +1,4 @@
-package com.example.android.interaktivereinkaufszettel.geldmanagment;
+package com.example.android.interaktivereinkaufszettel.Dialogs;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -16,15 +16,17 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.DialogFragment;
 
+import com.example.android.interaktivereinkaufszettel.ModelsAndAdapters.Category;
+import com.example.android.interaktivereinkaufszettel.ModelsAndAdapters.Rechnung;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 
-import static com.example.android.interaktivereinkaufszettel.geldmanagment.Rechnung.RECHNUNG_GEKAUFT;
-import static com.example.android.interaktivereinkaufszettel.geldmanagment.Rechnung.RECHNUNG_GEPLANT;
-import static com.example.android.interaktivereinkaufszettel.geldmanagment.Rechnung.RECHNUNG_ZAHLUNG;
+import static com.example.android.interaktivereinkaufszettel.ModelsAndAdapters.Rechnung.RECHNUNG_GEKAUFT;
+import static com.example.android.interaktivereinkaufszettel.ModelsAndAdapters.Rechnung.RECHNUNG_GEPLANT;
+import static com.example.android.interaktivereinkaufszettel.ModelsAndAdapters.Rechnung.RECHNUNG_ZAHLUNG;
 
 public class NewRechnungDialog extends DialogFragment {
 

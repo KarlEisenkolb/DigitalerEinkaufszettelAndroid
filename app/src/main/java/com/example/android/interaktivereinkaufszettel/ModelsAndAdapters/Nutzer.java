@@ -1,16 +1,16 @@
-package com.example.android.interaktivereinkaufszettel.geldmanagment;
+package com.example.android.interaktivereinkaufszettel.ModelsAndAdapters;
 
-import com.example.android.interaktivereinkaufszettel.Crypt;
+import com.example.android.interaktivereinkaufszettel.Security.Crypt;
 
-import static com.example.android.interaktivereinkaufszettel.Crypt.CRYPT_USE_DEFAULT_KEY;
-import static com.example.android.interaktivereinkaufszettel.Crypt.CRYPT_USE_PASSPHRASE;
+import static com.example.android.interaktivereinkaufszettel.Security.Crypt.CRYPT_USE_DEFAULT_KEY;
+import static com.example.android.interaktivereinkaufszettel.Security.Crypt.CRYPT_USE_PASSPHRASE;
 
 public class Nutzer {
 
-    static final String NAME        = "oPd6M2d8Hdg";
-    static final String GEHALT      = "msH2g9Gw5mX";
-    static final String KONTOSTAND  = "psMv8H25dGp";
-    static final String ID          = "cW9v$lf6sMR";
+    public static final String NAME        = "oPd6M2d8Hdg";
+    public static final String GEHALT      = "msH2g9Gw5mX";
+    public static final String KONTOSTAND  = "psMv8H25dGp";
+    public static final String ID          = "cW9v$lf6sMR";
 
     private String oPd6M2d8Hdg; // Name
     private String msH2g9Gw5mX; // Gehalt

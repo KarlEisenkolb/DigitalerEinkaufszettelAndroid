@@ -1,4 +1,4 @@
-package com.example.android.interaktivereinkaufszettel;
+package com.example.android.interaktivereinkaufszettel.Utility;
 
 import android.content.Context;
 import android.content.Intent;
@@ -7,6 +7,9 @@ import android.speech.RecognitionListener;
 import android.speech.RecognizerIntent;
 import android.speech.SpeechRecognizer;
 import android.util.Log;
+
+import com.example.android.interaktivereinkaufszettel.ModelsAndAdapters.Note;
+import com.example.android.interaktivereinkaufszettel.Security.Crypt;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -14,7 +17,7 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import java.util.ArrayList;
 import java.util.Locale;
 
-import static com.example.android.interaktivereinkaufszettel.Crypt.CRYPT_USE_DEFAULT_KEY;
+import static com.example.android.interaktivereinkaufszettel.Security.Crypt.CRYPT_USE_DEFAULT_KEY;
 import static com.example.android.interaktivereinkaufszettel.MainActivity.FIRESTORE_EINKAUFSZETTEL_COLLECTION;
 
 public class CustomSpeechRecognition {
@@ -36,8 +39,6 @@ public class CustomSpeechRecognition {
                 RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
         mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE,
                 Locale.getDefault());
-        mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_PREFER_OFFLINE,
-                true);
 
         mSpeechRecognizer.setRecognitionListener(new RecognitionListener() {
             @Override

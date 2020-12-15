@@ -1,4 +1,4 @@
-package com.example.android.interaktivereinkaufszettel;
+package com.example.android.interaktivereinkaufszettel.ModelsAndAdapters;
 
 import android.content.Context;
 import android.graphics.Color;
@@ -9,12 +9,13 @@ import android.view.ViewGroup;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import com.example.android.interaktivereinkaufszettel.ModelsAndAdapters.Note;
+import com.example.android.interaktivereinkaufszettel.R;
 import com.firebase.ui.firestore.FirestoreRecyclerAdapter;
 import com.firebase.ui.firestore.FirestoreRecyclerOptions;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
-import androidx.recyclerview.widget.SimpleItemAnimator;
 
 public class NoteAdapter extends FirestoreRecyclerAdapter<Note, RecyclerView.ViewHolder> {
 
@@ -77,7 +78,7 @@ public class NoteAdapter extends FirestoreRecyclerAdapter<Note, RecyclerView.Vie
         }
     }
 
-    class NoteHolder extends RecyclerView.ViewHolder {
+    public class NoteHolder extends RecyclerView.ViewHolder {
         private TextView textViewContent;
         private RelativeLayout itemViewId;
 
@@ -109,7 +110,7 @@ public class NoteAdapter extends FirestoreRecyclerAdapter<Note, RecyclerView.Vie
         }
     }
 
-    class CategoryHolder extends RecyclerView.ViewHolder {
+    public class CategoryHolder extends RecyclerView.ViewHolder {
         private TextView textViewContent;
         private RelativeLayout itemViewId;
 

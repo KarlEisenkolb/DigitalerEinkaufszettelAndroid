@@ -1,4 +1,4 @@
-package com.example.android.interaktivereinkaufszettel.geldmanagment.ui.main;
+package com.example.android.interaktivereinkaufszettel.Geldmanagment;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -12,19 +12,19 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.android.interaktivereinkaufszettel.R;
-import com.example.android.interaktivereinkaufszettel.geldmanagment.CalculateGeldmanagmentAndSetMenu;
-import com.example.android.interaktivereinkaufszettel.geldmanagment.Category;
-import com.example.android.interaktivereinkaufszettel.geldmanagment.NewRechnungDialog;
-import com.example.android.interaktivereinkaufszettel.geldmanagment.Rechnung;
-import com.example.android.interaktivereinkaufszettel.geldmanagment.RechnungAdapter;
+import com.example.android.interaktivereinkaufszettel.Utility.CalculateGeldmanagmentAndSetMenu;
+import com.example.android.interaktivereinkaufszettel.ModelsAndAdapters.Category;
+import com.example.android.interaktivereinkaufszettel.Dialogs.NewRechnungDialog;
+import com.example.android.interaktivereinkaufszettel.ModelsAndAdapters.Rechnung;
+import com.example.android.interaktivereinkaufszettel.ModelsAndAdapters.RechnungAdapter;
 import com.firebase.ui.firestore.FirestoreRecyclerOptions;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
 
-import static com.example.android.interaktivereinkaufszettel.geldmanagment.Geldmanagment.currentNutzer;
-import static com.example.android.interaktivereinkaufszettel.geldmanagment.Geldmanagment.viewPager;
-import static com.example.android.interaktivereinkaufszettel.geldmanagment.Geldmanagment.menu;
+import static com.example.android.interaktivereinkaufszettel.Geldmanagment.Geldmanagment.currentNutzer;
+import static com.example.android.interaktivereinkaufszettel.Geldmanagment.Geldmanagment.viewPager;
+import static com.example.android.interaktivereinkaufszettel.Geldmanagment.Geldmanagment.menu;
 
 /**
  * A placeholder fragment containing a simple view.

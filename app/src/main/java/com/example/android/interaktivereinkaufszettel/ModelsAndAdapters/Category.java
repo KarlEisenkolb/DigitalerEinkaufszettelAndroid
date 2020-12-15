@@ -1,9 +1,9 @@
-package com.example.android.interaktivereinkaufszettel.geldmanagment;
+package com.example.android.interaktivereinkaufszettel.ModelsAndAdapters;
 
-import com.example.android.interaktivereinkaufszettel.Crypt;
+import com.example.android.interaktivereinkaufszettel.Security.Crypt;
 
-import static com.example.android.interaktivereinkaufszettel.Crypt.CRYPT_USE_DEFAULT_KEY;
-import static com.example.android.interaktivereinkaufszettel.Crypt.CRYPT_USE_PASSPHRASE;
+import static com.example.android.interaktivereinkaufszettel.Security.Crypt.CRYPT_USE_DEFAULT_KEY;
+import static com.example.android.interaktivereinkaufszettel.Security.Crypt.CRYPT_USE_PASSPHRASE;
 
 public class Category {
 

@@ -10,11 +10,11 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity
-            android:name=".geldmanagment.AddEditNutzerAndLists"
+            android:name=".Geldmanagment.AddEditNutzerAndLists"
             android:label="Nutzer und Kategorien"
-            android:parentActivityName=".geldmanagment.Geldmanagment"/>
+            android:parentActivityName=".Geldmanagment.Geldmanagment"/>
         <activity
-            android:name=".geldmanagment.Geldmanagment"
+            android:name=".Geldmanagment.Geldmanagment"
             android:label=""
             android:parentActivityName=".MainActivity"
             android:theme="@style/AppTheme.NoActionBar" />

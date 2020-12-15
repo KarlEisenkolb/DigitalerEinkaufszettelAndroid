@@ -1,20 +1,22 @@
-package com.example.android.interaktivereinkaufszettel;
+package com.example.android.interaktivereinkaufszettel.ModelsAndAdapters;
 
-import static com.example.android.interaktivereinkaufszettel.Crypt.CRYPT_USE_DEFAULT_KEY;
+import com.example.android.interaktivereinkaufszettel.Security.Crypt;
+
+import static com.example.android.interaktivereinkaufszettel.Security.Crypt.CRYPT_USE_DEFAULT_KEY;
 
 public class Note {
 
-    static final long NOTE_NO_COLOR = 0;
-    static final long NOTE_COLOR_GREEN = 1;
-    static final long NOTE_COLOR_YELLOW = 2;
-    static final long NOTE = 0;
-    static final long CATEGORY = 1;
+    public static final long NOTE_NO_COLOR = 0;
+    public static final long NOTE_COLOR_GREEN = 1;
+    public static final long NOTE_COLOR_YELLOW = 2;
+    public static final long NOTE = 0;
+    public static final long CATEGORY = 1;
 
-    static final String ADAPTER_POS = "inXEAIWqkta";
-    static final String CONTENT     = "bZI0mGySHpL";
-    static final String NOTE_COLOR  = "eiz1WXHTZ3o";
-    static final String TYPE        = "lMIs9w2TzUP";
-    static final String ID          = "sMIosTjdmzc";
+    public static final String ADAPTER_POS = "inXEAIWqkta";
+    public static final String CONTENT     = "bZI0mGySHpL";
+    public static final String NOTE_COLOR  = "eiz1WXHTZ3o";
+    public static final String TYPE        = "lMIs9w2TzUP";
+    public static final String ID          = "sMIosTjdmzc";
 
     private String bZI0mGySHpL; //content
     private String inXEAIWqkta; //adapterPos

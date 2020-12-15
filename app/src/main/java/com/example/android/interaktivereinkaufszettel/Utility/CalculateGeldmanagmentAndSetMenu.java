@@ -1,4 +1,4 @@
-package com.example.android.interaktivereinkaufszettel.geldmanagment;
+package com.example.android.interaktivereinkaufszettel.Utility;
 
 import android.graphics.Color;
 import android.os.Bundle;
@@ -10,6 +10,9 @@ import android.view.MenuItem;
 
 import androidx.annotation.NonNull;
 
+import com.example.android.interaktivereinkaufszettel.ModelsAndAdapters.Category;
+import com.example.android.interaktivereinkaufszettel.ModelsAndAdapters.Nutzer;
+import com.example.android.interaktivereinkaufszettel.ModelsAndAdapters.Rechnung;
 import com.example.android.interaktivereinkaufszettel.R;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
@@ -18,7 +21,7 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 
-import static com.example.android.interaktivereinkaufszettel.geldmanagment.Geldmanagment.FIRESTORE_NUTZER_COLLECTION;
+import static com.example.android.interaktivereinkaufszettel.Geldmanagment.Geldmanagment.FIRESTORE_NUTZER_COLLECTION;
 
 public class CalculateGeldmanagmentAndSetMenu {
 
@@ -26,7 +29,6 @@ public class CalculateGeldmanagmentAndSetMenu {
     private CollectionReference collectionNutzerReference;
     private CollectionReference collectionIndividualBillReference;
     private String currentNutzerString;
-    private Double currentNutzerGehaltsanteil;
     private Double kontostand;
     private Menu menu;
     private long categoryType;
@@ -53,20 +55,20 @@ public class CalculateGeldmanagmentAndSetMenu {
                                 Nutzer currentNutzer = null;
                                 for (QueryDocumentSnapshot doc : task.getResult()) {
                                     Nutzer docNutzer = doc.toObject(Nutzer.class);
-                                    summeGehalt = summeGehalt + docNutzer.gibGehalt();
+                                    summeGehalt = summeGehalt + docNutzer.gibAnteil();
                                     if (docNutzer.gibName().equals(currentNutzerString))
                                         currentNutzer = docNutzer;
                                 }
-                                currentNutzerGehaltsanteil = currentNutzer.gibGehalt()/summeGehalt;
-                                calculateCurrentGroupList();
-                                Log.d(TAG, "onComplete: "+currentNutzerGehaltsanteil);
+                                Double currentNutzerAnteil = currentNutzer.gibAnteil()/summeGehalt;
+                                calculateCurrentGroupList(currentNutzerAnteil);
+                                Log.d(TAG, "onComplete: "+currentNutzerAnteil);
                             }}
                     });
         }else
             calculateCurrentSoloList();
     }
 
-    private void calculateCurrentGroupList(){
+    private void calculateCurrentGroupList(final Double currentNutzerAnteil){
         collectionIndividualBillReference.get()
                 .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
                     @Override
@@ -77,15 +79,15 @@ public class CalculateGeldmanagmentAndSetMenu {
                                 Rechnung docRechnung = doc.toObject(Rechnung.class);
                                 if (docRechnung.gibType() == Rechnung.RECHNUNG_GEKAUFT){
                                     if (docRechnung.gibKauefer().equals(currentNutzerString))
-                                        kontostand = kontostand + docRechnung.gibPreis()*(1-currentNutzerGehaltsanteil);
+                                        kontostand = kontostand + docRechnung.gibPreis()*(1-currentNutzerAnteil);
                                     else
-                                        kontostand = kontostand - docRechnung.gibPreis()*currentNutzerGehaltsanteil;
+                                        kontostand = kontostand - docRechnung.gibPreis()*currentNutzerAnteil;
                                 }
                                 if (docRechnung.gibType() == Rechnung.RECHNUNG_ZAHLUNG){
                                     if (docRechnung.gibKauefer().equals(currentNutzerString))
                                         kontostand = kontostand + docRechnung.gibPreis();
                                     else
-                                        kontostand = kontostand - docRechnung.gibPreis();
+                                        kontostand = kontostand - docRechnung.gibPreis()*currentNutzerAnteil;
                                 }
                             }
                             setMenu();

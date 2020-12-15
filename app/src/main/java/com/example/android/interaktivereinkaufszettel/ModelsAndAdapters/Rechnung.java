@@ -1,9 +1,10 @@
-package com.example.android.interaktivereinkaufszettel.geldmanagment;
+package com.example.android.interaktivereinkaufszettel.ModelsAndAdapters;
 
-import com.example.android.interaktivereinkaufszettel.Crypt;
+import com.example.android.interaktivereinkaufszettel.Security.Crypt;
 
-import static com.example.android.interaktivereinkaufszettel.Crypt.CRYPT_USE_DEFAULT_KEY;
-import static com.example.android.interaktivereinkaufszettel.Crypt.CRYPT_USE_PASSPHRASE;
+import java.util.List;
+
+import static com.example.android.interaktivereinkaufszettel.Security.Crypt.CRYPT_USE_DEFAULT_KEY;
 
 public class Rechnung {
 
@@ -11,25 +12,27 @@ public class Rechnung {
     public static final long RECHNUNG_GEPLANT = 1;
     public static final long RECHNUNG_ZAHLUNG = 2;
 
-    public static final String CONTENT     = "kd9G2nFs8Js";
-    public static final String KAUEFER     = "o8VsZ37Mdg6";
-    public static final String KATEGORIE   = "zF2mdPsV3j5";
-    public static final String PREIS       = "pY2md6KeutM";
-    public static final String DATUM       = "uB2ksp24bsP";
-    public static final String TYPE        = "fiJ7Dn2m63d";
-    public static final String ID          = "sM43hs2G49n";
+    public static final String CONTENT                  = "kd9G2nFs8Js";
+    public static final String KAUEFER                  = "o8VsZ37Mdg6";
+    public static final String KATEGORIE                = "zF2mdPsV3j5";
+    public static final String PREIS                    = "pY2md6KeutM";
+    public static final String KAUEFER_GEHALTSANTEIL    = "jEYndDjdkHs";
+    public static final String DATUM                    = "uB2ksp24bsP";
+    public static final String TYPE                     = "fiJ7Dn2m63d";
+    public static final String ID                       = "sM43hs2G49n";
 
     private String kd9G2nFs8Js; // Content
     private String o8VsZ37Mdg6; // Kauefer
     private String zF2mdPsV3j5; // Kategorie
     private String pY2md6KeutM; // Preis
+    private String jEYndDjdkHs; // KaueferGehaltsanteil
     private long   uB2ksp24bsP; // Datum
     private String fiJ7Dn2m63d; // Type
     private String sM43hs2G49n; // Id
 
     public Rechnung(){}
 
-    public Rechnung(String content, String kauefer, String kategorie, Double preis, long datum, long type, String id){
+    public Rechnung(String content, String kauefer, List<Nutzer> nutzerList, String kategorie, Double preis, long datum, long type, String id){
         Crypt crypt = new Crypt(CRYPT_USE_DEFAULT_KEY);
         this.kd9G2nFs8Js = crypt.encryptString(content);
         this.o8VsZ37Mdg6 = crypt.encryptString(kauefer);
@@ -44,6 +47,7 @@ public class Rechnung {
     public String geto8VsZ37Mdg6() { return o8VsZ37Mdg6; }
     public String getzF2mdPsV3j5() { return zF2mdPsV3j5; }
     public String getpY2md6KeutM() { return pY2md6KeutM; }
+    public String getjEYndDjdkHs() { return jEYndDjdkHs; }
     public long   getuB2ksp24bsP() { return uB2ksp24bsP; }
     public String getfiJ7Dn2m63d() { return fiJ7Dn2m63d; }
     public String getsM43hs2G49n() { return sM43hs2G49n; }
@@ -64,6 +68,11 @@ public class Rechnung {
     }
 
     public Double gibPreis() {
+        Crypt crypt = new Crypt(CRYPT_USE_DEFAULT_KEY);
+        return crypt.decryptDouble(getpY2md6KeutM());
+    }
+
+    public Double gibKaueferGehaltsanteil() {
         Crypt crypt = new Crypt(CRYPT_USE_DEFAULT_KEY);
         return crypt.decryptDouble(getpY2md6KeutM());
     }

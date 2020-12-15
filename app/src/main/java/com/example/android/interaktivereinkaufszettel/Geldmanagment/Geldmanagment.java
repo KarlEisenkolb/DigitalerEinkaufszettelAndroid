@@ -1,4 +1,4 @@
-package com.example.android.interaktivereinkaufszettel.geldmanagment;
+package com.example.android.interaktivereinkaufszettel.Geldmanagment;
 
 import android.content.Context;
 import android.content.Intent;
@@ -10,16 +10,19 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toast;
-
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.PopupMenu;
 import androidx.appcompat.widget.Toolbar;
 import androidx.viewpager.widget.ViewPager;
-import com.example.android.interaktivereinkaufszettel.Crypt;
-import com.example.android.interaktivereinkaufszettel.CustomFingerprintSecurityHandling;
+
+import com.example.android.interaktivereinkaufszettel.Dialogs.NewRechnungDialog;
+import com.example.android.interaktivereinkaufszettel.ModelsAndAdapters.Nutzer;
+import com.example.android.interaktivereinkaufszettel.Security.Crypt;
+import com.example.android.interaktivereinkaufszettel.Security.CustomFingerprintSecurityHandling;
+import com.example.android.interaktivereinkaufszettel.ModelsAndAdapters.Category;
 import com.example.android.interaktivereinkaufszettel.R;
-import com.example.android.interaktivereinkaufszettel.geldmanagment.ui.main.SectionsPagerAdapter;
+import com.example.android.interaktivereinkaufszettel.Utility.CalculateGeldmanagmentAndSetMenu;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
@@ -34,13 +37,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static android.view.Menu.NONE;
-import static com.example.android.interaktivereinkaufszettel.Crypt.CRYPT_USE_DEFAULT_KEY;
-import static com.example.android.interaktivereinkaufszettel.geldmanagment.Category.CATEGORY_GROUP_LIST;
+import static com.example.android.interaktivereinkaufszettel.Security.Crypt.CRYPT_USE_DEFAULT_KEY;
+import static com.example.android.interaktivereinkaufszettel.ModelsAndAdapters.Category.CATEGORY_GROUP_LIST;
 
 public class Geldmanagment extends AppCompatActivity {
 
     final static public String FIRESTORE_NUTZER_COLLECTION                  = "cLhew80dDbSjs0bs3m7dM8";
-    final static public String FIRESTORE_CATEGORY_COLLECTION                = "lGwp4B9sJNsU8M1Dp9B5sI";
+    final static public String FIRESTORE_CATEGORY_COLLECTION                = "lGwp4B9sJNsU8M1Dp9B5sI"; // Liste an CategoryId's
     final static public String FIRESTORE_EINKAUFSZETTEL_BILL_COLLECTION     = "p0WhvEhpE93RGct0peCj";
     final static public String FIRESTORE_EINKAUFSZETTEL_CATEGORY_NAME       = "Haushalt";
 
@@ -93,10 +96,19 @@ public class Geldmanagment extends AppCompatActivity {
                     public void onComplete(@NonNull Task<QuerySnapshot> task) {
                         if (task.isSuccessful()) {
                             nutzerList.clear();
+                            Double summeGehalt = 0.0;
+                            Nutzer currentNutzer = null;
                             for (QueryDocumentSnapshot doc : task.getResult()) {
-                                nutzerList.add(doc.toObject(Nutzer.class));
+                                Nutzer docNutzer = doc.toObject(Nutzer.class);
+                                nutzerList.add(docNutzer);
+                                summeGehalt = summeGehalt + docNutzer.gibGehalt();
+                                if (docNutzer.gibName().equals(currentNutzer))
+                                    currentNutzer = docNutzer;
                             }
-                        }}});
+                            currentNutzerGehaltsanteil = currentNutzer.gibGehalt()/summeGehalt;
+                        }
+
+                    }});
 
         tabs = findViewById(R.id.tabs);
         viewPager = findViewById(R.id.view_pager);
@@ -173,7 +185,7 @@ public class Geldmanagment extends AppCompatActivity {
                                 categories.add(category);
                             }
                         }
-                        sectionsPagerAdapter = new SectionsPagerAdapter(Geldmanagment.this, categories, getSupportFragmentManager());
+                        sectionsPagerAdapter = new SectionsPagerAdapter(categories, getSupportFragmentManager());
                         viewPager.setAdapter(sectionsPagerAdapter);
                         viewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
                             @Override

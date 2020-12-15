@@ -1,4 +1,4 @@
-package com.example.android.interaktivereinkaufszettel.geldmanagment;
+package com.example.android.interaktivereinkaufszettel.Dialogs;
 
 import android.app.Activity;
 import android.app.AlertDialog;
