@@ -127,7 +127,7 @@ public class AddEditNutzerAndLists extends AppCompatActivity {
             @Override
             public void onItemClick(Nutzer nutzer) {
                 nutzer_name_EditTextView.setText(nutzer.gibName());
-                nutzer_gehalt_EditTextView.setText(String.valueOf(nutzer.gibGehalt()));
+                nutzer_gehalt_EditTextView.setText(String.valueOf(nutzer.gibZahlungsanteil()));
                 currentClickedNutzer = nutzer;
             }
         });
@@ -153,7 +153,7 @@ public class AddEditNutzerAndLists extends AppCompatActivity {
 
             WriteBatch batch = firebaseFirestore.batch();
             batch.update(collectionNutzerReference.document(currentClickedNutzer.gibId()), Nutzer.NAME, cryptNormal.encryptString(nutzer_name_EditTextView.getText().toString()));
-            batch.update(collectionNutzerReference.document(currentClickedNutzer.gibId()), Nutzer.GEHALT, cryptPassphrase.encryptDouble(Double.valueOf(nutzer_gehalt_EditTextView.getText().toString())));
+            batch.update(collectionNutzerReference.document(currentClickedNutzer.gibId()), Nutzer.ZAHLUNGSANTEIL, cryptPassphrase.encryptDouble(Double.valueOf(nutzer_gehalt_EditTextView.getText().toString())));
             batch.commit();
         } else
             Snackbar.make(recyclerViewUser, "Leere Eingabe in Feld", Snackbar.LENGTH_LONG).show();

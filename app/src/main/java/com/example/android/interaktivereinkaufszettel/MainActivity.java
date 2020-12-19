@@ -20,16 +20,15 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-
 import com.example.android.interaktivereinkaufszettel.Dialogs.NewEinkaufFinishedDialog;
 import com.example.android.interaktivereinkaufszettel.ModelsAndAdapters.Note;
 import com.example.android.interaktivereinkaufszettel.ModelsAndAdapters.NoteAdapter;
 import com.example.android.interaktivereinkaufszettel.Security.Crypt;
 import com.example.android.interaktivereinkaufszettel.Security.CustomFingerprintSecurityHandling;
 import com.example.android.interaktivereinkaufszettel.Security.CustomFirebaseSecurityHandling;
+import com.example.android.interaktivereinkaufszettel.Utility.CustomGlobalContext;
 import com.example.android.interaktivereinkaufszettel.Utility.CustomSpeechRecognition;
 import com.example.android.interaktivereinkaufszettel.Geldmanagment.Geldmanagment;
-import com.example.android.interaktivereinkaufszettel.ModelsAndAdapters.Nutzer;
 import com.firebase.ui.auth.IdpResponse;
 import com.firebase.ui.firestore.FirestoreRecyclerOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
@@ -52,11 +51,11 @@ import com.google.firebase.firestore.WriteBatch;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
+
 import static com.example.android.interaktivereinkaufszettel.Security.Crypt.CRYPT_USE_DEFAULT_KEY;
 import static com.example.android.interaktivereinkaufszettel.Security.CustomFingerprintSecurityHandling.PASSPHRASE;
 import static com.example.android.interaktivereinkaufszettel.ModelsAndAdapters.Note.ADAPTER_POS;
 import static com.example.android.interaktivereinkaufszettel.Geldmanagment.Geldmanagment.FIRESTORE_EINKAUFSZETTEL_BILL_COLLECTION;
-import static com.example.android.interaktivereinkaufszettel.Geldmanagment.Geldmanagment.FIRESTORE_NUTZER_COLLECTION;
 import static com.example.android.interaktivereinkaufszettel.Geldmanagment.Geldmanagment.SHARED_PREF;
 import static com.example.android.interaktivereinkaufszettel.Geldmanagment.Geldmanagment.SHARED_PREF_NAME;
 import static com.example.android.interaktivereinkaufszettel.Geldmanagment.Geldmanagment.SHARED_PREF_NO_NUTZER;
@@ -67,7 +66,8 @@ public class MainActivity extends AppCompatActivity {
     public final static String FIRESTORE_SAVE_EINKAUFSZETTEL_COLLECTION    = "xW5LGz1vR9D67rIwH9yROQ";
     public final static int RC_SIGN_IN = 0;
 
-    static String which_category = "default";
+    private static String which_category = "default";
+    private final String passphrase = "gus321butzel0";
     private CustomFirebaseSecurityHandling securityHandling;
     private AudioManager audio;
     private SoundPool soundPool;
@@ -81,7 +81,6 @@ public class MainActivity extends AppCompatActivity {
     private FloatingActionButton fab_done;
     private Crypt crypt;
     private String[] categoryNameId;
-    private Double currentNutzerGehaltsanteil;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -90,6 +89,7 @@ public class MainActivity extends AppCompatActivity {
         Toolbar toolbar = findViewById(R.id.toolbar_main);
         setSupportActionBar(toolbar);
 
+        Crypt.initializePassphrase(passphrase);
         crypt = new Crypt(CRYPT_USE_DEFAULT_KEY);
         securityHandling = new CustomFirebaseSecurityHandling(this);
 
@@ -293,8 +293,6 @@ public class MainActivity extends AppCompatActivity {
         //Fab-Done-Button Funktionalität
         //===================================================================================================================================================
 
-        setCurrentNutzerGehaltsanteil();
-
         fab_done = findViewById(R.id.fab_shoppingDone);
         fab_done.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -310,7 +308,7 @@ public class MainActivity extends AppCompatActivity {
                     final WriteBatch batch = firebaseFirestore.batch();
                     soundPool.play(finishSound, 0.2F, 0.2F, 0, 0, 1);
 
-                    NewEinkaufFinishedDialog rechnungDialog = NewEinkaufFinishedDialog.newInstance(currentNutzer, currentNutzerGehaltsanteil, new NewEinkaufFinishedDialog.OnDialogFinishedListener() {
+                    NewEinkaufFinishedDialog rechnungDialog = NewEinkaufFinishedDialog.newInstance(currentNutzer, new NewEinkaufFinishedDialog.OnDialogFinishedListener() {
                         @Override
                         public void onDialogFinished(final DocumentReference docRefOfAddedRechnung) {
                             for (Note currentNote : adapter.getSnapshots()) {
@@ -344,35 +342,6 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    private void setCurrentNutzerGehaltsanteil() {
-        CollectionReference collectionNutzerReference = firebaseFirestore.collection(FIRESTORE_NUTZER_COLLECTION);
-        collectionNutzerReference.get()
-                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-                    @Override
-                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
-                        if (task.isSuccessful()) {
-                            final SharedPreferences sharedPreferences = getSharedPreferences(SHARED_PREF, MODE_PRIVATE);
-                            String currentNutzerCrypt = sharedPreferences.getString(SHARED_PREF_NAME, SHARED_PREF_NO_NUTZER);
-                            String currentNutzerString = null;
-                            if (!currentNutzerCrypt.equals(SHARED_PREF_NO_NUTZER)){
-                                Crypt crypt = new Crypt(CRYPT_USE_DEFAULT_KEY);
-                                currentNutzerString = crypt.decryptString(currentNutzerCrypt);
-                            }else
-                                currentNutzerString = currentNutzerCrypt;
-
-                            Double summeGehalt = 0.0;
-                            Nutzer currentNutzer = null;
-                            for (QueryDocumentSnapshot doc : task.getResult()) {
-                                Nutzer docNutzer = doc.toObject(Nutzer.class);
-                                summeGehalt = summeGehalt + docNutzer.gibGehalt();
-                                if (docNutzer.gibName().equals(currentNutzerString))
-                                    currentNutzer = docNutzer;
-                            }
-                            currentNutzerGehaltsanteil = currentNutzer.gibGehalt()/summeGehalt;
-                        }
-                    }});
-    }
-
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -403,12 +372,8 @@ public class MainActivity extends AppCompatActivity {
         final SharedPreferences sharedPreferences = getSharedPreferences(SHARED_PREF, MODE_PRIVATE);
         String currentNutzer = sharedPreferences.getString(SHARED_PREF_NAME, SHARED_PREF_NO_NUTZER);
 
-        MenuItem nutzer = menu.findItem(R.id.current_user);
-        if (!currentNutzer.equals(SHARED_PREF_NO_NUTZER)){
-            Crypt crypt = new Crypt(CRYPT_USE_DEFAULT_KEY);
-            nutzer.setTitle(crypt.decryptString(currentNutzer));
-        }else
-            nutzer.setTitle(currentNutzer);
+        Crypt crypt = new Crypt(CRYPT_USE_DEFAULT_KEY);
+        CustomGlobalContext.getInstance().firestoreUpdateNutzerListAndSetMenu(crypt.decryptString(currentNutzer), menu);
         return true;
     }
 
@@ -490,7 +455,7 @@ public class MainActivity extends AppCompatActivity {
                 @Override
                 public void onFingerprintSuccess() {
                     Intent intent = new Intent(MainActivity.this, Geldmanagment.class);
-                    intent.putExtra(PASSPHRASE, "gus321butzel0");
+                    intent.putExtra(PASSPHRASE, passphrase);
                     startActivity(intent);
                 }
             });
@@ -501,12 +466,6 @@ public class MainActivity extends AppCompatActivity {
             return true;
         }
         return super.onOptionsItemSelected(item);
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        setCurrentNutzerGehaltsanteil();
     }
 
     @Override

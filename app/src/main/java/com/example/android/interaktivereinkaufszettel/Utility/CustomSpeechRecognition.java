@@ -2,11 +2,16 @@ package com.example.android.interaktivereinkaufszettel.Utility;
 
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Color;
+import android.graphics.PorterDuff;
 import android.os.Bundle;
 import android.speech.RecognitionListener;
 import android.speech.RecognizerIntent;
 import android.speech.SpeechRecognizer;
 import android.util.Log;
+import android.view.View;
+import android.widget.TextView;
+import android.widget.Toast;
 
 import com.example.android.interaktivereinkaufszettel.ModelsAndAdapters.Note;
 import com.example.android.interaktivereinkaufszettel.Security.Crypt;
@@ -29,7 +34,7 @@ public class CustomSpeechRecognition {
     private String which_category = "default";
     private Note categoryNote;
 
-    public CustomSpeechRecognition(Context ctx) {
+    public CustomSpeechRecognition(final Context ctx) {
 
         collectionReference = firebaseFirestore.collection(FIRESTORE_EINKAUFSZETTEL_COLLECTION);
         mSpeechRecognizer = SpeechRecognizer.createSpeechRecognizer(ctx);
@@ -43,10 +48,22 @@ public class CustomSpeechRecognition {
         mSpeechRecognizer.setRecognitionListener(new RecognitionListener() {
             @Override
             public void onReadyForSpeech(Bundle params) {
+                Toast toast = Toast.makeText(ctx, "Höre....", Toast.LENGTH_SHORT);
+                View view = toast.getView();
+
+                //Gets the actual oval background of the Toast then sets the colour filter
+                view.getBackground().setColorFilter(Color.BLACK, PorterDuff.Mode.SRC_IN);
+
+                //Gets the TextView from the Toast so it can be editted
+                TextView text = view.findViewById(android.R.id.message);
+                text.setTextColor(Color.WHITE);
+
+                toast.show();
             }
 
             @Override
             public void onBeginningOfSpeech() {
+
             }
 
             @Override

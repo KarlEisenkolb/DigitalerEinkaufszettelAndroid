@@ -1,6 +1,8 @@
 package com.example.android.interaktivereinkaufszettel.ModelsAndAdapters;
 
 import android.graphics.Color;
+import android.text.SpannableString;
+import android.text.style.ForegroundColorSpan;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -11,6 +13,8 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.android.interaktivereinkaufszettel.R;
+import com.example.android.interaktivereinkaufszettel.Utility.CalculateGeldmanagmentAndSetMenu;
+import com.example.android.interaktivereinkaufszettel.Utility.CustomGlobalContext;
 import com.firebase.ui.firestore.FirestoreRecyclerAdapter;
 import com.firebase.ui.firestore.FirestoreRecyclerOptions;
 
@@ -19,8 +23,14 @@ import java.text.SimpleDateFormat;
 public class RechnungAdapter extends FirestoreRecyclerAdapter<Rechnung, RecyclerView.ViewHolder> {
     final SimpleDateFormat simpleDateFormat = new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss");
     private RechnungAdapter.OnLongItemClickListener listener;
+    private CustomGlobalContext customGlobalContext;
+    private long categoryType;
 
-    public RechnungAdapter(@NonNull FirestoreRecyclerOptions<Rechnung> options) { super(options); }
+    public RechnungAdapter(@NonNull FirestoreRecyclerOptions<Rechnung> options, long categoryType) {
+        super(options);
+        customGlobalContext = CustomGlobalContext.getInstance();
+        this.categoryType = categoryType;
+    }
 
     @NonNull
     @Override
@@ -37,27 +47,53 @@ public class RechnungAdapter extends FirestoreRecyclerAdapter<Rechnung, Recycler
 
     @Override
     protected void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position, @NonNull Rechnung rechnung) {
+        String currentNutzer = customGlobalContext.getCurrentNutzer();
         if (holder instanceof RechnungAdapter.RechnungHolder) { // Rechnung
-            ((RechnungHolder) holder).rechnung_name.setText(rechnung.gibContent());
-            ((RechnungHolder) holder).rechnung_nutzer.setText(rechnung.gibKauefer());
-            ((RechnungHolder) holder).rechnung_preis.setText(rechnung.gibPreis() + " €");
-            if (rechnung.gibType() == Rechnung.RECHNUNG_GEKAUFT)
-                ((RechnungHolder) holder).rechnung_datum.setText(simpleDateFormat.format(rechnung.gibDatum()));
-            else
-                ((RechnungHolder) holder).rechnung_datum.setText("geplant");
+            fillRechnungsHolder((RechnungHolder) holder, rechnung, currentNutzer);
         }else{ // Zahlung
-            ((ZahlungHolder) holder).zahlung_nutzer.setText(rechnung.gibKauefer());
-            ((ZahlungHolder) holder).zahlung_preis.setText(rechnung.gibPreis() + " €");
-            ((ZahlungHolder) holder).zahlung_name.setText(rechnung.gibContent());
-            ((ZahlungHolder) holder).zahlung_datum.setText(simpleDateFormat.format(rechnung.gibDatum()));
-            ((ZahlungHolder) holder).zahlung_color.setBackgroundColor(Color.parseColor("#F5F5F5"));
+            fillZahlungHolder((ZahlungHolder) holder, rechnung);
         }
+    }
+
+    private void fillZahlungHolder(@NonNull ZahlungHolder holder, @NonNull Rechnung rechnung) {
+        holder.zahlung_nutzer.setText(rechnung.gibKauefer());
+        holder.zahlung_preis.setText(rechnung.gibPreis() + " €");
+        holder.zahlung_name.setText(rechnung.gibContent());
+        holder.zahlung_datum.setText(simpleDateFormat.format(rechnung.gibDatum()));
+        holder.zahlung_color.setBackgroundColor(Color.parseColor("#F5F5F5"));
+    }
+
+    private void fillRechnungsHolder(@NonNull RechnungHolder holder, @NonNull Rechnung rechnung, String currentNutzer) {
+        holder.rechnung_name.setText(rechnung.gibContent());
+        Double nutzerAnteil = CalculateGeldmanagmentAndSetMenu.extractNutzerAnteil(rechnung, currentNutzer);
+        holder.rechnung_nutzer.setText(rechnung.gibKauefer());
+
+        if (categoryType == Category.CATEGORY_GROUP_LIST) {
+            SpannableString coloredString;
+            if (rechnung.gibKauefer().equals(currentNutzer)) { // Rot wenn Kontostand weniger als -1 Cent
+                coloredString = new SpannableString(Math.round(rechnung.gibPreis() * (1 - nutzerAnteil) * 100) / 100.0 + " €");
+                coloredString.setSpan(new ForegroundColorSpan(Color.rgb(34, 128, 34)), 0, coloredString.length(), 0);
+            } else {
+                coloredString = new SpannableString(Math.round(rechnung.gibPreis() * nutzerAnteil * 100) / 100.0 + " €");
+                coloredString.setSpan(new ForegroundColorSpan(Color.RED), 0, coloredString.length(), 0);
+            }
+            holder.rechnung_preis.setText(rechnung.gibPreis() + " €   (" + Math.round(nutzerAnteil * 10000)/100.0 + "%) ");
+            holder.rechnung_preis_anteil.setText(coloredString);
+        }else {
+            holder.rechnung_preis_anteil.setText("");
+            holder.rechnung_preis.setText(rechnung.gibPreis() + " €");
+        }
+        if (rechnung.gibType() == Rechnung.RECHNUNG_GEKAUFT)
+            holder.rechnung_datum.setText(simpleDateFormat.format(rechnung.gibDatum()));
+        else
+            holder.rechnung_datum.setText("geplant");
     }
 
     class RechnungHolder extends RecyclerView.ViewHolder {
         private TextView rechnung_name;
         private TextView rechnung_nutzer;
         private TextView rechnung_preis;
+        private TextView rechnung_preis_anteil;
         private TextView rechnung_datum;
         private LinearLayout rechnung_color;
 
@@ -66,6 +102,7 @@ public class RechnungAdapter extends FirestoreRecyclerAdapter<Rechnung, Recycler
             rechnung_name = itemView.findViewById(R.id.rechnung_name);
             rechnung_nutzer = itemView.findViewById(R.id.rechnung_nutzer);
             rechnung_preis = itemView.findViewById(R.id.rechnung_preis);
+            rechnung_preis_anteil = itemView.findViewById(R.id.rechnung_preis_anteil);
             rechnung_datum = itemView.findViewById(R.id.rechnung_datum);
             rechnung_color = itemView.findViewById(R.id.background_color_rechnung_item);
 

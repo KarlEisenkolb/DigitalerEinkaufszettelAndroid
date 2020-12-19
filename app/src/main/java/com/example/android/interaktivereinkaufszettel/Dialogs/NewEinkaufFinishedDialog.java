@@ -16,6 +16,7 @@ import androidx.annotation.NonNull;
 import androidx.fragment.app.DialogFragment;
 
 import com.example.android.interaktivereinkaufszettel.ModelsAndAdapters.Rechnung;
+import com.example.android.interaktivereinkaufszettel.Utility.CustomGlobalContext;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.firestore.CollectionReference;
@@ -35,15 +36,13 @@ public class NewEinkaufFinishedDialog extends DialogFragment {
     private int modus;
     private CollectionReference collectionEinkaufszettelBillReference;
     private String nutzerUndKauefer;
-    private Double currentNutzerGehaltsanteil;
     private Rechnung rechnung;
 
-    public static NewEinkaufFinishedDialog newInstance(String nutzerUndKauefer, Double currentNutzerGehaltsanteil, OnDialogFinishedListener onDialogFinishedListener) {
+    public static NewEinkaufFinishedDialog newInstance(String nutzerUndKauefer, OnDialogFinishedListener onDialogFinishedListener) {
         NewEinkaufFinishedDialog f = new NewEinkaufFinishedDialog();
         f.setOnDialogFinishedListener(onDialogFinishedListener);
         Bundle bundle = new Bundle();
         bundle.putString(Rechnung.KAUEFER, nutzerUndKauefer);
-        bundle.putDouble(Rechnung.KAUEFER_GEHALTSANTEIL, currentNutzerGehaltsanteil);
         f.setArguments(bundle);
         return f;
     }
@@ -70,7 +69,6 @@ public class NewEinkaufFinishedDialog extends DialogFragment {
     public Dialog onCreateDialog(Bundle savedInstanceState) {
         // Use the Builder class for convenient dialog construction
         nutzerUndKauefer            = getArguments().getString(Rechnung.KAUEFER); // Für Hinzufügen
-        currentNutzerGehaltsanteil  = getArguments().getDouble(Rechnung.KAUEFER_GEHALTSANTEIL);
 
         FirebaseFirestore firebaseFirestore = FirebaseFirestore.getInstance();
         collectionEinkaufszettelBillReference = firebaseFirestore.collection(FIRESTORE_EINKAUFSZETTEL_BILL_COLLECTION); // Für Hinzufügen/Updaten/Löschen
@@ -117,9 +115,9 @@ public class NewEinkaufFinishedDialog extends DialogFragment {
                             if (isNotEmpty(editPreisText) && isNotEmpty(editContentText))
                                 docRef.set(new Rechnung(editContentText.getText().toString(),
                                                         nutzerUndKauefer,
+                                                        CustomGlobalContext.getInstance().getNutzerList(),
                                                         FIRESTORE_EINKAUFSZETTEL_CATEGORY_NAME,
                                                         Double.valueOf(editPreisText.getText().toString()),
-                                                        currentNutzerGehaltsanteil,
                                                         System.currentTimeMillis(),
                                                         RECHNUNG_GEKAUFT,
                                                         docRef.getId()

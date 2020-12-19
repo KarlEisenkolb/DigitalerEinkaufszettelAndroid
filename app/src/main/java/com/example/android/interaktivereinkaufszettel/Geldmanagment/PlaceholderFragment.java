@@ -5,26 +5,24 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
-
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.recyclerview.widget.SimpleItemAnimator;
 
 import com.example.android.interaktivereinkaufszettel.R;
-import com.example.android.interaktivereinkaufszettel.Utility.CalculateGeldmanagmentAndSetMenu;
 import com.example.android.interaktivereinkaufszettel.ModelsAndAdapters.Category;
 import com.example.android.interaktivereinkaufszettel.Dialogs.NewRechnungDialog;
 import com.example.android.interaktivereinkaufszettel.ModelsAndAdapters.Rechnung;
 import com.example.android.interaktivereinkaufszettel.ModelsAndAdapters.RechnungAdapter;
+import com.example.android.interaktivereinkaufszettel.Utility.CalculateGeldmanagmentAndSetMenu;
+import com.example.android.interaktivereinkaufszettel.Utility.CustomGlobalContext;
 import com.firebase.ui.firestore.FirestoreRecyclerOptions;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
-
-import static com.example.android.interaktivereinkaufszettel.Geldmanagment.Geldmanagment.currentNutzer;
-import static com.example.android.interaktivereinkaufszettel.Geldmanagment.Geldmanagment.viewPager;
-import static com.example.android.interaktivereinkaufszettel.Geldmanagment.Geldmanagment.menu;
+import java.util.List;
 
 /**
  * A placeholder fragment containing a simple view.
@@ -32,42 +30,41 @@ import static com.example.android.interaktivereinkaufszettel.Geldmanagment.Geldm
 public class PlaceholderFragment extends Fragment {
 
     private CollectionReference collectionIndividualBillReference;
-    private long categoryType;
     private RecyclerView recyclerViewRechnung;
     private RechnungAdapter adapterRechnung;
-    private SectionsPagerAdapter sectionsPagerAdapter;
+    private Category categoryOfAdapter;
+    private long categoryType;
+    private CustomGlobalContext cgc;
 
-    public static PlaceholderFragment newInstance(Category category, SectionsPagerAdapter sectionsPagerAdapter) {
-        PlaceholderFragment fragment = new PlaceholderFragment();
-        fragment.setSectionsPagerAdapter(sectionsPagerAdapter);
-        Bundle bundle = new Bundle();
-        bundle.putString(Category.ID, category.gibId());
-        bundle.putString(Category.NAME, category.gibName());
-        bundle.putLong(Category.TYPE, category.gibType());
-        fragment.setArguments(bundle);
-        return fragment;
+    public static PlaceholderFragment newInstance(Category category) {
+        PlaceholderFragment f = new PlaceholderFragment();
+        f.setCategory(category);
+        return f;
     }
 
-    private void setSectionsPagerAdapter(SectionsPagerAdapter sectionsPagerAdapter){
-        this.sectionsPagerAdapter = sectionsPagerAdapter;
+    public List<Rechnung> getAdapterData(){
+        return adapterRechnung.getSnapshots();
+    }
+    public Category getCategory() {
+        return categoryOfAdapter;
+    }
+    private void setCategory(Category category) {
+        this.categoryOfAdapter = category;
     }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
-            categoryType = getArguments().getLong(Category.TYPE);
-            String categoryID = getArguments().getString(Category.ID);
-            FirebaseFirestore firebaseFirestore = FirebaseFirestore.getInstance();
-            collectionIndividualBillReference = firebaseFirestore.collection(categoryID);
-        }
+        collectionIndividualBillReference = FirebaseFirestore.getInstance().collection(categoryOfAdapter.gibId());
+        categoryType = categoryOfAdapter.gibType();
+        cgc = CustomGlobalContext.getInstance();
     }
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View root = inflater.inflate(R.layout.fragment_geldmanagment, container, false);
 
-        TextView typeView = root.findViewById(R.id.solo_or_grouplist);
+        final TextView typeView = root.findViewById(R.id.solo_or_grouplist);
         if (categoryType == Category.CATEGORY_SOLO_LIST)
             typeView.setText("Privatliste");
         else
@@ -80,14 +77,15 @@ public class PlaceholderFragment extends Fragment {
         recyclerViewRechnung = root.findViewById(R.id.recycler_view_rechnungen);
         recyclerViewRechnung.setLayoutManager(new LinearLayoutManager(getContext()));
         recyclerViewRechnung.setNestedScrollingEnabled(false);
-        adapterRechnung = new RechnungAdapter(optionsRechnung);
+        adapterRechnung = new RechnungAdapter(optionsRechnung, categoryType);
+        final PlaceholderFragment placeholderFragment = this;
         adapterRechnung.setOnLongItemClickListener(new RechnungAdapter.OnLongItemClickListener() {
             @Override
             public void onLongItemClick(Rechnung rechnung) {
-                NewRechnungDialog rechnungDialog = NewRechnungDialog.newUpdateInstance(rechnung, collectionIndividualBillReference.getId(), new NewRechnungDialog.OnDialogFinishedListener() {
+                NewRechnungDialog rechnungDialog = NewRechnungDialog.newUpdateInstance(rechnung, categoryOfAdapter, new NewRechnungDialog.OnDialogFinishedListener() {
                     @Override
                     public void onDialogFinished() {
-                        new CalculateGeldmanagmentAndSetMenu(currentNutzer, menu, sectionsPagerAdapter.getItem(viewPager.getCurrentItem()).getArguments());
+                        new CalculateGeldmanagmentAndSetMenu(cgc.getCurrentNutzer(), cgc.getGeldmanagmentMenu(), categoryOfAdapter, placeholderFragment);
                     }
                 });
                 rechnungDialog.show(getActivity().getSupportFragmentManager(), "RechnungDialog");
@@ -108,6 +106,4 @@ public class PlaceholderFragment extends Fragment {
         super.onStop();
         adapterRechnung.stopListening();
     }
-
-
 }

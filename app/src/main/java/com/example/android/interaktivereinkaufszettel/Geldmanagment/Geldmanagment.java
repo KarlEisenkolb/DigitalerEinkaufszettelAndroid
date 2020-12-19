@@ -15,7 +15,6 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.PopupMenu;
 import androidx.appcompat.widget.Toolbar;
 import androidx.viewpager.widget.ViewPager;
-
 import com.example.android.interaktivereinkaufszettel.Dialogs.NewRechnungDialog;
 import com.example.android.interaktivereinkaufszettel.ModelsAndAdapters.Nutzer;
 import com.example.android.interaktivereinkaufszettel.Security.Crypt;
@@ -23,6 +22,7 @@ import com.example.android.interaktivereinkaufszettel.Security.CustomFingerprint
 import com.example.android.interaktivereinkaufszettel.ModelsAndAdapters.Category;
 import com.example.android.interaktivereinkaufszettel.R;
 import com.example.android.interaktivereinkaufszettel.Utility.CalculateGeldmanagmentAndSetMenu;
+import com.example.android.interaktivereinkaufszettel.Utility.CustomGlobalContext;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
@@ -32,7 +32,6 @@ import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -55,14 +54,12 @@ public class Geldmanagment extends AppCompatActivity {
 
     private final List<Category> categories = new ArrayList<>();
     private TabLayout tabs;
-    public static ViewPager viewPager;
+    private ViewPager viewPager;
     private SectionsPagerAdapter sectionsPagerAdapter;
-    private CollectionReference collectionNutzerReference;
     private CollectionReference collectionCategoryReference;
-    private List<Nutzer> nutzerList = new ArrayList<>();
-    private FirebaseFirestore firebaseFirestore;
-    public static String currentNutzer;
-    public static Menu menu;
+    private String currentNutzer;
+    private Menu menu;
+    private CustomGlobalContext cgc = CustomGlobalContext.getInstance();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -77,9 +74,7 @@ public class Geldmanagment extends AppCompatActivity {
             Crypt.initializePassphrase(passphrase);
         }
 
-        firebaseFirestore = FirebaseFirestore.getInstance();
-        collectionNutzerReference = firebaseFirestore.collection(FIRESTORE_NUTZER_COLLECTION);
-        collectionCategoryReference = firebaseFirestore.collection(FIRESTORE_CATEGORY_COLLECTION);
+        collectionCategoryReference = FirebaseFirestore.getInstance().collection(FIRESTORE_CATEGORY_COLLECTION);
 
         final SharedPreferences sharedPreferences = getSharedPreferences(SHARED_PREF, MODE_PRIVATE);
         String currentNutzerToCheck = sharedPreferences.getString(SHARED_PREF_NAME, SHARED_PREF_NO_NUTZER);
@@ -90,26 +85,6 @@ public class Geldmanagment extends AppCompatActivity {
         }else
             currentNutzer = currentNutzerToCheck;
 
-        collectionNutzerReference.get()
-                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-                    @Override
-                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
-                        if (task.isSuccessful()) {
-                            nutzerList.clear();
-                            Double summeGehalt = 0.0;
-                            Nutzer currentNutzer = null;
-                            for (QueryDocumentSnapshot doc : task.getResult()) {
-                                Nutzer docNutzer = doc.toObject(Nutzer.class);
-                                nutzerList.add(docNutzer);
-                                summeGehalt = summeGehalt + docNutzer.gibGehalt();
-                                if (docNutzer.gibName().equals(currentNutzer))
-                                    currentNutzer = docNutzer;
-                            }
-                            currentNutzerGehaltsanteil = currentNutzer.gibGehalt()/summeGehalt;
-                        }
-
-                    }});
-
         tabs = findViewById(R.id.tabs);
         viewPager = findViewById(R.id.view_pager);
         final FloatingActionButton fabBill = findViewById(R.id.fab_add_bill);
@@ -118,10 +93,10 @@ public class Geldmanagment extends AppCompatActivity {
         fabBill.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                NewRechnungDialog rechnungDialog = NewRechnungDialog.newAddInstance(sectionsPagerAdapter.getItem(viewPager.getCurrentItem()).getArguments(), currentNutzer, new NewRechnungDialog.OnDialogFinishedListener() {
+                NewRechnungDialog rechnungDialog = NewRechnungDialog.newAddInstance(getCurrentFragment().getCategory(), currentNutzer, new NewRechnungDialog.OnDialogFinishedListener() {
                     @Override
                     public void onDialogFinished() {
-                        new CalculateGeldmanagmentAndSetMenu(currentNutzer, menu, sectionsPagerAdapter.getItem(viewPager.getCurrentItem()).getArguments());
+                        new CalculateGeldmanagmentAndSetMenu(currentNutzer, menu, getCurrentFragment().getCategory(), getCurrentFragment());
                     }
                 });
                 rechnungDialog.show(getSupportFragmentManager(), "RechnungDialog");
@@ -136,15 +111,15 @@ public class Geldmanagment extends AppCompatActivity {
                 if (checkInternetConnection(getApplicationContext())){
                     PopupMenu popup = new PopupMenu(Geldmanagment.this, fabNutzer);
                     int i = 0;
-                    for (Nutzer currentNutzer : nutzerList) {
+                    for (Nutzer currentNutzer : cgc.getNutzerList()) {
                         popup.getMenu().add(NONE, i, NONE, currentNutzer.gibName());
                         i++;
                     }
 
                     popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
                         public boolean onMenuItemClick(MenuItem item) {
-
-                            Snackbar.make(fabNutzer, item.getTitle(), Snackbar.LENGTH_LONG)
+                            currentNutzer = item.getTitle().toString();
+                            Snackbar.make(fabNutzer, currentNutzer, Snackbar.LENGTH_LONG)
                                     .setAction("Action", null).show();
 
                             Crypt crypt = new Crypt(CRYPT_USE_DEFAULT_KEY);
@@ -153,9 +128,7 @@ public class Geldmanagment extends AppCompatActivity {
                             editor.putString(SHARED_PREF_NAME, crypt.encryptString(item.getTitle().toString()));
                             editor.apply();
 
-                            MenuItem current_user = menu.findItem(R.id.current_user);
-                            current_user.setTitle(item.getTitle().toString());
-                            currentNutzer = item.getTitle().toString();
+                            cgc.firestoreUpdateNutzerListAndSetMenu(item.getTitle().toString(), menu);
                             settingPagingSections();
                             return true;
                         }
@@ -166,6 +139,10 @@ public class Geldmanagment extends AppCompatActivity {
                 }
             }
         });
+    }
+
+    private PlaceholderFragment getCurrentFragment() {
+        return sectionsPagerAdapter.getItem(viewPager.getCurrentItem());
     }
 
     private void settingPagingSections(){
@@ -195,7 +172,7 @@ public class Geldmanagment extends AppCompatActivity {
 
                             @Override
                             public void onPageSelected(int position) {
-                                new CalculateGeldmanagmentAndSetMenu(currentNutzer, menu, sectionsPagerAdapter.getItem(position).getArguments());
+                                new CalculateGeldmanagmentAndSetMenu(currentNutzer, menu, getCurrentFragment().getCategory(), getCurrentFragment());
                             }
 
                             @Override
@@ -205,7 +182,7 @@ public class Geldmanagment extends AppCompatActivity {
                         });
                         tabs.setupWithViewPager(viewPager);
                         if (menu != null){
-                           new CalculateGeldmanagmentAndSetMenu(currentNutzer, menu, sectionsPagerAdapter.getItem(viewPager.getCurrentItem()).getArguments());
+                           new CalculateGeldmanagmentAndSetMenu(currentNutzer, menu, getCurrentFragment().getCategory(), getCurrentFragment());
                         }
                     }
                 }
@@ -227,12 +204,8 @@ public class Geldmanagment extends AppCompatActivity {
         final SharedPreferences sharedPreferences = getSharedPreferences(SHARED_PREF, MODE_PRIVATE);
         String currentNutzer = sharedPreferences.getString(SHARED_PREF_NAME, SHARED_PREF_NO_NUTZER);
 
-        MenuItem nutzer = menu.findItem(R.id.current_user);
-        if (!currentNutzer.equals(SHARED_PREF_NO_NUTZER)){
-            Crypt crypt = new Crypt(CRYPT_USE_DEFAULT_KEY);
-            nutzer.setTitle(crypt.decryptString(currentNutzer));
-        }else
-            nutzer.setTitle(currentNutzer);
+        Crypt crypt = new Crypt(CRYPT_USE_DEFAULT_KEY);
+        cgc.firestoreUpdateNutzerListAndSetMenu(crypt.decryptString(currentNutzer), menu);
         return true;
     }
 
@@ -240,7 +213,7 @@ public class Geldmanagment extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.kontostand:
-                new CalculateGeldmanagmentAndSetMenu(currentNutzer, menu, sectionsPagerAdapter.getItem(viewPager.getCurrentItem()).getArguments());
+                new CalculateGeldmanagmentAndSetMenu(currentNutzer, menu, getCurrentFragment().getCategory(), getCurrentFragment());
                 return true;
             case R.id.print:
                 return true;
@@ -257,4 +230,5 @@ public class Geldmanagment extends AppCompatActivity {
                 return super.onContextItemSelected(item);
         }
     }
+
 }

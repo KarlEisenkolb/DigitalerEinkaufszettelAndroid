@@ -18,6 +18,7 @@ import androidx.fragment.app.DialogFragment;
 
 import com.example.android.interaktivereinkaufszettel.ModelsAndAdapters.Category;
 import com.example.android.interaktivereinkaufszettel.ModelsAndAdapters.Rechnung;
+import com.example.android.interaktivereinkaufszettel.Utility.CustomGlobalContext;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.firestore.CollectionReference;
@@ -36,30 +37,27 @@ public class NewRechnungDialog extends DialogFragment {
     private OnDialogFinishedListener listener;
     private int modus;
     private CollectionReference collectionIndividualBillReference;
+    private String categoryName;
+    private long categoryType;
     private String nutzerUndKauefer;
-    private String kategorieName;
-    private long kategorieType;
+    private Category currentCategory;
     private Rechnung rechnung;
 
-    public static NewRechnungDialog newAddInstance(Bundle placeholderFragmentBundleCategoryID, String nutzerUndKauefer, OnDialogFinishedListener onDialogFinishedListener) {
+    public static NewRechnungDialog newAddInstance(Category currentCategory, String nutzerUndKauefer, OnDialogFinishedListener onDialogFinishedListener) {
         NewRechnungDialog f = new NewRechnungDialog();
-        f.setDialogModus(MODUS_ADD);
+        f.setCurrentCategory(currentCategory);
+        f.setNutzerUndKauefer(nutzerUndKauefer);
         f.setOnDialogFinishedListener(onDialogFinishedListener);
-        Bundle bundle = new Bundle();
-        bundle.putAll(placeholderFragmentBundleCategoryID); //Kategorie Name, Kategorie ID, Kategorie Type
-        bundle.putString(Rechnung.KAUEFER, nutzerUndKauefer);
-        f.setArguments(bundle);
+        f.setDialogModus(MODUS_ADD);
         return f;
     }
 
-    public static NewRechnungDialog newUpdateInstance(Rechnung rechnung, String categoryID, OnDialogFinishedListener onDialogFinishedListener) {
+    public static NewRechnungDialog newUpdateInstance(Rechnung rechnung, Category currentCategory, OnDialogFinishedListener onDialogFinishedListener) {
         NewRechnungDialog f = new NewRechnungDialog();
-        f.setDialogModus(MODUS_UPDATE);
-        f.setOnDialogFinishedListener(onDialogFinishedListener);
         f.setRechnung(rechnung);
-        Bundle bundle = new Bundle();
-        bundle.putString(Category.ID, categoryID);
-        f.setArguments(bundle);
+        f.setCurrentCategory(currentCategory);
+        f.setOnDialogFinishedListener(onDialogFinishedListener);
+        f.setDialogModus(MODUS_UPDATE);
         return f;
     }
 
@@ -67,6 +65,8 @@ public class NewRechnungDialog extends DialogFragment {
         void onDialogFinished();
     }
 
+    private void setNutzerUndKauefer(String nutzerUndKauefer){ this.nutzerUndKauefer = nutzerUndKauefer; }
+    private void setCurrentCategory(Category category){ this.currentCategory = category; }
     private void setOnDialogFinishedListener(OnDialogFinishedListener onDialogFinishedListener){ this.listener = onDialogFinishedListener;}
     private void setDialogModus(int modus) {
         this.modus = modus;
@@ -83,16 +83,10 @@ public class NewRechnungDialog extends DialogFragment {
 
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
-        // Use the Builder class for convenient dialog construction
-        if (getArguments() != null && modus == MODUS_ADD) {
-            kategorieName = getArguments().getString(Category.NAME); // Für Hinzufügen
-            kategorieType = getArguments().getLong(Category.TYPE); // Für Hinzufügen
-            nutzerUndKauefer = getArguments().getString(Rechnung.KAUEFER); // Für Hinzufügen
-        }
+        categoryName = currentCategory.gibName();
+        categoryType = currentCategory.gibType();
 
-        String categoryID = getArguments().getString(Category.ID);
-        FirebaseFirestore firebaseFirestore = FirebaseFirestore.getInstance();
-        collectionIndividualBillReference = firebaseFirestore.collection(categoryID); // Für Hinzufügen/Updaten/Löschen
+        collectionIndividualBillReference = FirebaseFirestore.getInstance().collection(currentCategory.gibId()); // Für Hinzufügen/Updaten/Löschen
 
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
 
@@ -118,7 +112,7 @@ public class NewRechnungDialog extends DialogFragment {
                 radioGroup.addView(radioButtonGeplant);
             }
         }else{ // MODUS_ADD
-            if (kategorieType == Category.CATEGORY_GROUP_LIST) {
+            if (categoryType == Category.CATEGORY_GROUP_LIST) {
                 radioGroup.addView(radioButtonGekauft);
                 radioGroup.addView(radioButtonGeplant);
                 radioGroup.addView(radioButtonZahlung);
@@ -127,6 +121,7 @@ public class NewRechnungDialog extends DialogFragment {
                 radioGroup.addView(radioButtonGeplant);
             }
         }
+        radioButtonGekauft.setChecked(true);
 
         final TextView contentTextView = new TextView(getContext());
         contentTextView.setPadding((int) dpToPx(getContext(), 20),(int) dpToPx(getContext(), 20),(int) dpToPx(getContext(), 20),(int) dpToPx(getContext(), 20));
@@ -179,7 +174,7 @@ public class NewRechnungDialog extends DialogFragment {
                             }
                             DocumentReference docRef = collectionIndividualBillReference.document();
                             if (isNotEmpty(editPreisText) && isNotEmpty(editContentText) && (radioButtonGeplant.isChecked() || radioButtonGekauft.isChecked() || radioButtonZahlung.isChecked()))
-                                docRef.set(new Rechnung(editContentText.getText().toString(), nutzerUndKauefer, kategorieName, Double.valueOf(editPreisText.getText().toString()), System.currentTimeMillis(), RadioButtonState, docRef.getId())).addOnCompleteListener(new OnCompleteListener<Void>() {
+                                docRef.set(new Rechnung(editContentText.getText().toString(), nutzerUndKauefer, CustomGlobalContext.getInstance().getNutzerList(), categoryName, Double.valueOf(editPreisText.getText().toString()), System.currentTimeMillis(), RadioButtonState, docRef.getId())).addOnCompleteListener(new OnCompleteListener<Void>() {
                                     @Override
                                     public void onComplete(@NonNull Task<Void> task) {
                                         listener.onDialogFinished();
@@ -200,7 +195,7 @@ public class NewRechnungDialog extends DialogFragment {
                                     long RadioButtonState = RECHNUNG_GEKAUFT;
                                     if (radioButtonGeplant.isChecked())
                                         RadioButtonState = RECHNUNG_GEPLANT;
-                                    collectionIndividualBillReference.document(rechnung.gibId()).set(new Rechnung(editContentText.getText().toString(), rechnung.gibKauefer(), rechnung.gibKategorie(), Double.valueOf(editPreisText.getText().toString()), System.currentTimeMillis(), RadioButtonState, rechnung.gibId())).addOnCompleteListener(new OnCompleteListener<Void>() {
+                                    collectionIndividualBillReference.document(rechnung.gibId()).set(new Rechnung(editContentText.getText().toString(), rechnung.gibKauefer(), CustomGlobalContext.getInstance().getNutzerList(), rechnung.gibKategorie(), Double.valueOf(editPreisText.getText().toString()), System.currentTimeMillis(), RadioButtonState, rechnung.gibId())).addOnCompleteListener(new OnCompleteListener<Void>() {
                                         @Override
                                         public void onComplete(@NonNull Task<Void> task) {
                                             listener.onDialogFinished();
@@ -210,7 +205,7 @@ public class NewRechnungDialog extends DialogFragment {
                                     Toast.makeText(getContext(), "Fehler: Leere Felder", Toast.LENGTH_LONG).show();
                             }else{ // Zahlung
                                 if (isNotEmpty(editPreisText) && isNotEmpty(editContentText)) {
-                                    collectionIndividualBillReference.document(rechnung.gibId()).set(new Rechnung(editContentText.getText().toString(), rechnung.gibKauefer(), rechnung.gibKategorie(), Double.valueOf(editPreisText.getText().toString()), rechnung.gibDatum(), rechnung.gibType(), rechnung.gibId())).addOnCompleteListener(new OnCompleteListener<Void>() {
+                                    collectionIndividualBillReference.document(rechnung.gibId()).set(new Rechnung(editContentText.getText().toString(), rechnung.gibKauefer(), CustomGlobalContext.getInstance().getNutzerList(), rechnung.gibKategorie(), Double.valueOf(editPreisText.getText().toString()), rechnung.gibDatum(), rechnung.gibType(), rechnung.gibId())).addOnCompleteListener(new OnCompleteListener<Void>() {
                                         @Override
                                         public void onComplete(@NonNull Task<Void> task) {
                                             listener.onDialogFinished();

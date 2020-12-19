@@ -4,6 +4,7 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentStatePagerAdapter;
+import androidx.viewpager.widget.ViewPager;
 
 import com.example.android.interaktivereinkaufszettel.ModelsAndAdapters.Category;
 
@@ -17,15 +18,19 @@ import java.util.List;
 public class SectionsPagerAdapter extends FragmentStatePagerAdapter {
 
     private List<Category> categories;
+    private PlaceholderFragment[] fragments;
 
     public SectionsPagerAdapter(List<Category> categories, FragmentManager fm) {
         super(fm, BEHAVIOR_RESUME_ONLY_CURRENT_FRAGMENT);
         this.categories = new ArrayList<>(categories);
+        this.fragments = new PlaceholderFragment[categories.size()];
     }
 
     @Override
-    public Fragment getItem(int position) {
-        return PlaceholderFragment.newInstance(categories.get(position), this);
+    public PlaceholderFragment getItem(int position) {
+        if(fragments[position] == null)
+            fragments[position] = PlaceholderFragment.newInstance(categories.get(position));
+        return fragments[position];
     }
 
     @Nullable

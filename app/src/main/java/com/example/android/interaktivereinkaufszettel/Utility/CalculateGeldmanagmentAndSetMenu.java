@@ -1,17 +1,14 @@
 package com.example.android.interaktivereinkaufszettel.Utility;
 
 import android.graphics.Color;
-import android.os.Bundle;
 import android.text.SpannableString;
 import android.text.style.ForegroundColorSpan;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-
 import androidx.annotation.NonNull;
 
+import com.example.android.interaktivereinkaufszettel.Geldmanagment.PlaceholderFragment;
 import com.example.android.interaktivereinkaufszettel.ModelsAndAdapters.Category;
-import com.example.android.interaktivereinkaufszettel.ModelsAndAdapters.Nutzer;
 import com.example.android.interaktivereinkaufszettel.ModelsAndAdapters.Rechnung;
 import com.example.android.interaktivereinkaufszettel.R;
 import com.google.android.gms.tasks.OnCompleteListener;
@@ -20,55 +17,27 @@ import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
-
-import static com.example.android.interaktivereinkaufszettel.Geldmanagment.Geldmanagment.FIRESTORE_NUTZER_COLLECTION;
+import java.util.List;
 
 public class CalculateGeldmanagmentAndSetMenu {
 
-    final private static String TAG = "UtilityDebug";
-    private CollectionReference collectionNutzerReference;
     private CollectionReference collectionIndividualBillReference;
     private String currentNutzerString;
     private Double kontostand;
     private Menu menu;
-    private long categoryType;
 
-    public CalculateGeldmanagmentAndSetMenu(String currentNutzer, Menu menuMain, Bundle categoryBundle){
-
+    public CalculateGeldmanagmentAndSetMenu(String currentNutzer, Menu menuMain, Category adapterCategory, PlaceholderFragment currentFragment){
         currentNutzerString = currentNutzer;
         menu = menuMain;
+        collectionIndividualBillReference = FirebaseFirestore.getInstance().collection(adapterCategory.gibId());
 
-        categoryType = categoryBundle.getLong(Category.TYPE);
-        String categoryID = categoryBundle.getString(Category.ID);
-
-        FirebaseFirestore firebaseFirestore = FirebaseFirestore.getInstance();
-        collectionNutzerReference = firebaseFirestore.collection(FIRESTORE_NUTZER_COLLECTION);
-        collectionIndividualBillReference = firebaseFirestore.collection(categoryID);
-
-        if (categoryType == Category.CATEGORY_GROUP_LIST){
-            collectionNutzerReference.get()
-                    .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-                        @Override
-                        public void onComplete(@NonNull Task<QuerySnapshot> task) {
-                            if (task.isSuccessful()) {
-                                Double summeGehalt = 0.0;
-                                Nutzer currentNutzer = null;
-                                for (QueryDocumentSnapshot doc : task.getResult()) {
-                                    Nutzer docNutzer = doc.toObject(Nutzer.class);
-                                    summeGehalt = summeGehalt + docNutzer.gibAnteil();
-                                    if (docNutzer.gibName().equals(currentNutzerString))
-                                        currentNutzer = docNutzer;
-                                }
-                                Double currentNutzerAnteil = currentNutzer.gibAnteil()/summeGehalt;
-                                calculateCurrentGroupList(currentNutzerAnteil);
-                                Log.d(TAG, "onComplete: "+currentNutzerAnteil);
-                            }}
-                    });
+        if (adapterCategory.gibType() == Category.CATEGORY_GROUP_LIST){
+            calculateCurrentGroupList();
         }else
             calculateCurrentSoloList();
     }
 
-    private void calculateCurrentGroupList(final Double currentNutzerAnteil){
+    public void calculateCurrentGroupList(){
         collectionIndividualBillReference.get()
                 .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
                     @Override
@@ -77,6 +46,7 @@ public class CalculateGeldmanagmentAndSetMenu {
                             kontostand = 0.0;
                             for (QueryDocumentSnapshot doc : task.getResult()) {
                                 Rechnung docRechnung = doc.toObject(Rechnung.class);
+                                Double currentNutzerAnteil = extractNutzerAnteil(docRechnung, currentNutzerString);
                                 if (docRechnung.gibType() == Rechnung.RECHNUNG_GEKAUFT){
                                     if (docRechnung.gibKauefer().equals(currentNutzerString))
                                         kontostand = kontostand + docRechnung.gibPreis()*(1-currentNutzerAnteil);
@@ -93,6 +63,20 @@ public class CalculateGeldmanagmentAndSetMenu {
                             setMenu();
                         }}
                 });
+    }
+
+    public static Double extractNutzerAnteil(Rechnung rechnung, String currentNutzerString) {
+        Double gesamtAnteile = 0.0;
+        Double nutzerAnteil = 0.0;
+        List<String> nutzer     = rechnung.gibNutzerListe();
+        List<Double> anteile    = rechnung.gibNutzerZahlungsanteile();
+
+        for (int i=0; i<nutzer.size(); i++){
+            gesamtAnteile += anteile.get(i);
+            if (nutzer.get(i).equals(currentNutzerString))
+                nutzerAnteil = anteile.get(i);
+        }
+        return nutzerAnteil/gesamtAnteile;
     }
 
     private void calculateCurrentSoloList(){
