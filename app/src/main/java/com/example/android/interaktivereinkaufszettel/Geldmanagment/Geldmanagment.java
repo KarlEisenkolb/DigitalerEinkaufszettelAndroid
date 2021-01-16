@@ -6,9 +6,11 @@ import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.TextView;
 import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -17,6 +19,7 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.viewpager.widget.ViewPager;
 import com.example.android.interaktivereinkaufszettel.Dialogs.NewRechnungDialog;
 import com.example.android.interaktivereinkaufszettel.ModelsAndAdapters.Nutzer;
+import com.example.android.interaktivereinkaufszettel.ModelsAndAdapters.Rechnung;
 import com.example.android.interaktivereinkaufszettel.Security.Crypt;
 import com.example.android.interaktivereinkaufszettel.Security.CustomFingerprintSecurityHandling;
 import com.example.android.interaktivereinkaufszettel.ModelsAndAdapters.Category;
@@ -29,6 +32,7 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.tabs.TabLayout;
 import com.google.firebase.firestore.CollectionReference;
+import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
@@ -36,11 +40,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static android.view.Menu.NONE;
+import static com.example.android.interaktivereinkaufszettel.ModelsAndAdapters.Rechnung.RECHNUNG_GEKAUFT;
 import static com.example.android.interaktivereinkaufszettel.Security.Crypt.CRYPT_USE_DEFAULT_KEY;
 import static com.example.android.interaktivereinkaufszettel.ModelsAndAdapters.Category.CATEGORY_GROUP_LIST;
 
 public class Geldmanagment extends AppCompatActivity {
 
+    final static public int NUMBER_OF_RECHNUNGEN_LOADED_PER_ADAPTER         = 40;
     final static public String FIRESTORE_NUTZER_COLLECTION                  = "cLhew80dDbSjs0bs3m7dM8";
     final static public String FIRESTORE_CATEGORY_COLLECTION                = "lGwp4B9sJNsU8M1Dp9B5sI"; // Liste an CategoryId's
     final static public String FIRESTORE_EINKAUFSZETTEL_BILL_COLLECTION     = "p0WhvEhpE93RGct0peCj";
@@ -60,6 +66,9 @@ public class Geldmanagment extends AppCompatActivity {
     private String currentNutzer;
     private Menu menu;
     private CustomGlobalContext cgc = CustomGlobalContext.getInstance();
+    private TextView averageView;
+    private TextView countView;
+    private TextView groupView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -87,8 +96,24 @@ public class Geldmanagment extends AppCompatActivity {
 
         tabs = findViewById(R.id.tabs);
         viewPager = findViewById(R.id.view_pager);
+        averageView = findViewById(R.id.average_monthly);
+        countView = findViewById(R.id.rechnungen_count);
+        groupView = findViewById(R.id.solo_or_grouplist);
+
         final FloatingActionButton fabBill = findViewById(R.id.fab_add_bill);
         final FloatingActionButton fabNutzer = findViewById(R.id.fab_choose_nutzer);
+
+        CalculateGeldmanagmentAndSetMenu.setOnCalculationDoneListener(new CalculateGeldmanagmentAndSetMenu.OnCalculationDoneListener() {
+            @Override
+            public void setMenuTextViewsOfFragment(String groupOrSoloList, double averagePerMonth, int itemcount, int fragmentposition) {
+                    groupView.setText(groupOrSoloList);
+                    countView.setText(itemcount + " Belege");
+                    if (averagePerMonth < 10000)
+                        averageView.setText(averagePerMonth + " €/Monat");
+                    else
+                        averageView.setText("no Average");
+            }
+        });
 
         fabBill.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -172,7 +197,8 @@ public class Geldmanagment extends AppCompatActivity {
 
                             @Override
                             public void onPageSelected(int position) {
-                                new CalculateGeldmanagmentAndSetMenu(currentNutzer, menu, getCurrentFragment().getCategory(), getCurrentFragment());
+                                new CalculateGeldmanagmentAndSetMenu(currentNutzer, menu, sectionsPagerAdapter.getItem(position).getCategory(), sectionsPagerAdapter.getItem(position));
+                                Log.d("PageChangerLogging", "onPageSelected: " + position);
                             }
 
                             @Override
@@ -204,8 +230,11 @@ public class Geldmanagment extends AppCompatActivity {
         final SharedPreferences sharedPreferences = getSharedPreferences(SHARED_PREF, MODE_PRIVATE);
         String currentNutzer = sharedPreferences.getString(SHARED_PREF_NAME, SHARED_PREF_NO_NUTZER);
 
-        Crypt crypt = new Crypt(CRYPT_USE_DEFAULT_KEY);
-        cgc.firestoreUpdateNutzerListAndSetMenu(crypt.decryptString(currentNutzer), menu);
+        if(!currentNutzer.equals(SHARED_PREF_NO_NUTZER)){
+            Crypt crypt = new Crypt(CRYPT_USE_DEFAULT_KEY);
+            cgc.firestoreUpdateNutzerListAndSetMenu(crypt.decryptString(currentNutzer), menu);
+        }else
+            CustomGlobalContext.getInstance().firestoreUpdateNutzerListAndSetMenu(currentNutzer, menu);
         return true;
     }
 
@@ -230,5 +259,4 @@ public class Geldmanagment extends AppCompatActivity {
                 return super.onContextItemSelected(item);
         }
     }
-
 }

@@ -7,6 +7,7 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentTransaction;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.SimpleItemAnimator;
@@ -24,6 +25,8 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
 import java.util.List;
 
+import static com.example.android.interaktivereinkaufszettel.Geldmanagment.Geldmanagment.NUMBER_OF_RECHNUNGEN_LOADED_PER_ADAPTER;
+
 /**
  * A placeholder fragment containing a simple view.
  */
@@ -35,10 +38,12 @@ public class PlaceholderFragment extends Fragment {
     private Category categoryOfAdapter;
     private long categoryType;
     private CustomGlobalContext cgc;
+    private int position;
 
-    public static PlaceholderFragment newInstance(Category category) {
+    public static PlaceholderFragment newInstance(Category category, int position) {
         PlaceholderFragment f = new PlaceholderFragment();
         f.setCategory(category);
+        f.setPosition(position);
         return f;
     }
 
@@ -51,6 +56,10 @@ public class PlaceholderFragment extends Fragment {
     private void setCategory(Category category) {
         this.categoryOfAdapter = category;
     }
+    private void setPosition(int position) {
+        this.position = position;
+    }
+    public int getPosition(){return position;}
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -64,14 +73,8 @@ public class PlaceholderFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View root = inflater.inflate(R.layout.fragment_geldmanagment, container, false);
 
-        final TextView typeView = root.findViewById(R.id.solo_or_grouplist);
-        if (categoryType == Category.CATEGORY_SOLO_LIST)
-            typeView.setText("Privatliste");
-        else
-            typeView.setText("Gruppenliste");
-
         FirestoreRecyclerOptions<Rechnung> optionsRechnung = new FirestoreRecyclerOptions.Builder<Rechnung>()
-                .setQuery(collectionIndividualBillReference.orderBy(Rechnung.DATUM, Query.Direction.DESCENDING), Rechnung.class)
+                .setQuery(collectionIndividualBillReference.orderBy(Rechnung.DATUM, Query.Direction.DESCENDING).limit(NUMBER_OF_RECHNUNGEN_LOADED_PER_ADAPTER), Rechnung.class)
                 .build();
 
         recyclerViewRechnung = root.findViewById(R.id.recycler_view_rechnungen);
@@ -79,6 +82,7 @@ public class PlaceholderFragment extends Fragment {
         recyclerViewRechnung.setNestedScrollingEnabled(false);
         adapterRechnung = new RechnungAdapter(optionsRechnung, categoryType);
         final PlaceholderFragment placeholderFragment = this;
+
         adapterRechnung.setOnLongItemClickListener(new RechnungAdapter.OnLongItemClickListener() {
             @Override
             public void onLongItemClick(Rechnung rechnung) {

@@ -23,6 +23,8 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.android.interaktivereinkaufszettel.Dialogs.NewEinkaufFinishedDialog;
 import com.example.android.interaktivereinkaufszettel.ModelsAndAdapters.Note;
 import com.example.android.interaktivereinkaufszettel.ModelsAndAdapters.NoteAdapter;
+import com.example.android.interaktivereinkaufszettel.ModelsAndAdapters.Nutzer;
+import com.example.android.interaktivereinkaufszettel.ModelsAndAdapters.Rechnung;
 import com.example.android.interaktivereinkaufszettel.Security.Crypt;
 import com.example.android.interaktivereinkaufszettel.Security.CustomFingerprintSecurityHandling;
 import com.example.android.interaktivereinkaufszettel.Security.CustomFirebaseSecurityHandling;
@@ -49,9 +51,13 @@ import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.firestore.WriteBatch;
 import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.example.android.interaktivereinkaufszettel.Geldmanagment.Geldmanagment.FIRESTORE_EINKAUFSZETTEL_CATEGORY_NAME;
+import static com.example.android.interaktivereinkaufszettel.Geldmanagment.Geldmanagment.FIRESTORE_NUTZER_COLLECTION;
+import static com.example.android.interaktivereinkaufszettel.ModelsAndAdapters.Rechnung.RECHNUNG_GEKAUFT;
 import static com.example.android.interaktivereinkaufszettel.Security.Crypt.CRYPT_USE_DEFAULT_KEY;
 import static com.example.android.interaktivereinkaufszettel.Security.CustomFingerprintSecurityHandling.PASSPHRASE;
 import static com.example.android.interaktivereinkaufszettel.ModelsAndAdapters.Note.ADAPTER_POS;
@@ -88,7 +94,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         Toolbar toolbar = findViewById(R.id.toolbar_main);
         setSupportActionBar(toolbar);
-
+        addToDatabase();
         Crypt.initializePassphrase(passphrase);
         crypt = new Crypt(CRYPT_USE_DEFAULT_KEY);
         securityHandling = new CustomFirebaseSecurityHandling(this);
@@ -372,8 +378,10 @@ public class MainActivity extends AppCompatActivity {
         final SharedPreferences sharedPreferences = getSharedPreferences(SHARED_PREF, MODE_PRIVATE);
         String currentNutzer = sharedPreferences.getString(SHARED_PREF_NAME, SHARED_PREF_NO_NUTZER);
 
-        Crypt crypt = new Crypt(CRYPT_USE_DEFAULT_KEY);
-        CustomGlobalContext.getInstance().firestoreUpdateNutzerListAndSetMenu(crypt.decryptString(currentNutzer), menu);
+        if(!currentNutzer.equals(SHARED_PREF_NO_NUTZER))
+            CustomGlobalContext.getInstance().firestoreUpdateNutzerListAndSetMenu(crypt.decryptString(currentNutzer), menu);
+        else
+            CustomGlobalContext.getInstance().firestoreUpdateNutzerListAndSetMenu(currentNutzer, menu);
         return true;
     }
 
@@ -538,5 +546,37 @@ public class MainActivity extends AppCompatActivity {
                 return null;
         }
 
+    }
+
+    public static void addToDatabase() {
+        final List<Nutzer> nutzerList = new ArrayList<>();
+
+        FirebaseFirestore.getInstance().collection(FIRESTORE_NUTZER_COLLECTION).get()
+                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                    @Override
+                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                        if (task.isSuccessful()) {
+                            nutzerList.clear();
+                            for (QueryDocumentSnapshot doc : task.getResult()) {
+                                nutzerList.add(doc.toObject(Nutzer.class));
+                            }
+                            addDataToDatabase(nutzerList);
+                        }
+                    }});
+
+
+    }
+
+    private static void addDataToDatabase(List<Nutzer> nutzerList){
+        final CollectionReference einkaufszettelBillReference = FirebaseFirestore.getInstance().collection(FIRESTORE_EINKAUFSZETTEL_BILL_COLLECTION);
+        final SimpleDateFormat simpleDateFormat = new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss");
+        long currentTime = System.currentTimeMillis();
+        long period = 1000*60*60*24*10;
+        for(int i=1; i<=7; i++){
+            long documentTime = currentTime-period*i;
+            Log.d("AddThingsToDatabase", i + "|" + documentTime + "|" + simpleDateFormat.format(documentTime));
+            DocumentReference docRef = einkaufszettelBillReference.document();
+            //docRef.set(new Rechnung("test"+i, "Karl", nutzerList, FIRESTORE_EINKAUFSZETTEL_CATEGORY_NAME, i + 0.0, documentTime, RECHNUNG_GEKAUFT, docRef.getId()));
+        }
     }
 }

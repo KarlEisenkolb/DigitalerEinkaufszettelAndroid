@@ -35,10 +35,6 @@ public class CustomGlobalContext {
         return customGlobalContext;
     }
 
-    /*public void setCurrentNutzer(String currentNutzer) {
-        this.currentNutzer = currentNutzer;
-    }*/
-
     public String getCurrentNutzer() { return currentNutzer; }
     public Menu getGeldmanagmentMenu() {
         return menu;

@@ -195,7 +195,7 @@ public class NewRechnungDialog extends DialogFragment {
                                     long RadioButtonState = RECHNUNG_GEKAUFT;
                                     if (radioButtonGeplant.isChecked())
                                         RadioButtonState = RECHNUNG_GEPLANT;
-                                    collectionIndividualBillReference.document(rechnung.gibId()).set(new Rechnung(editContentText.getText().toString(), rechnung.gibKauefer(), CustomGlobalContext.getInstance().getNutzerList(), rechnung.gibKategorie(), Double.valueOf(editPreisText.getText().toString()), System.currentTimeMillis(), RadioButtonState, rechnung.gibId())).addOnCompleteListener(new OnCompleteListener<Void>() {
+                                    collectionIndividualBillReference.document(rechnung.gibId()).set(new Rechnung(editContentText.getText().toString(), rechnung.gibKauefer(), CustomGlobalContext.getInstance().getNutzerList(), rechnung.gibKategorie(), Double.valueOf(editPreisText.getText().toString()), rechnung.gibDatum(), RadioButtonState, rechnung.gibId())).addOnCompleteListener(new OnCompleteListener<Void>() {
                                         @Override
                                         public void onComplete(@NonNull Task<Void> task) {
                                             listener.onDialogFinished();

@@ -1,13 +1,9 @@
 package com.example.android.interaktivereinkaufszettel.Geldmanagment;
 
 import androidx.annotation.Nullable;
-import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentStatePagerAdapter;
-import androidx.viewpager.widget.ViewPager;
-
 import com.example.android.interaktivereinkaufszettel.ModelsAndAdapters.Category;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -29,7 +25,7 @@ public class SectionsPagerAdapter extends FragmentStatePagerAdapter {
     @Override
     public PlaceholderFragment getItem(int position) {
         if(fragments[position] == null)
-            fragments[position] = PlaceholderFragment.newInstance(categories.get(position));
+            fragments[position] = PlaceholderFragment.newInstance(categories.get(position), position);
         return fragments[position];
     }
 

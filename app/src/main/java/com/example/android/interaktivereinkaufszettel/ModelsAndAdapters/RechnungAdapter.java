@@ -38,9 +38,12 @@ public class RechnungAdapter extends FirestoreRecyclerAdapter<Rechnung, Recycler
         if (viewType == Rechnung.RECHNUNG_GEKAUFT || viewType == Rechnung.RECHNUNG_GEPLANT) {
             View itemView = LayoutInflater.from(parent.getContext()).inflate(R.layout.rechnung_item, parent, false);
             return new RechnungHolder(itemView);
-        }else{
+        }else if(viewType == Rechnung.RECHNUNG_ZAHLUNG){
             View itemView = LayoutInflater.from(parent.getContext()).inflate(R.layout.rechnung_zahlung, parent, false);
             return new ZahlungHolder(itemView);
+        }else{
+            View itemView = LayoutInflater.from(parent.getContext()).inflate(R.layout.rechnung_month_summary, parent, false);
+            return new MonthSummaryHolder(itemView);
         }
 
     }
@@ -50,9 +53,16 @@ public class RechnungAdapter extends FirestoreRecyclerAdapter<Rechnung, Recycler
         String currentNutzer = customGlobalContext.getCurrentNutzer();
         if (holder instanceof RechnungAdapter.RechnungHolder) { // Rechnung
             fillRechnungsHolder((RechnungHolder) holder, rechnung, currentNutzer);
-        }else{ // Zahlung
+        }else if(holder instanceof RechnungAdapter.ZahlungHolder){ // Zahlung
             fillZahlungHolder((ZahlungHolder) holder, rechnung);
-        }
+        }else
+            fillMonthSummary((MonthSummaryHolder) holder, rechnung);
+    }
+
+    private void fillMonthSummary(MonthSummaryHolder holder, Rechnung rechnung) {
+        SimpleDateFormat monthFormatter = new SimpleDateFormat("MMMM yyyy");
+        holder.month_date.setText(monthFormatter.format(rechnung.gibDatum()));
+        holder.month_summary.setText(" | " + rechnung.gibPreis() + " €");
     }
 
     private void fillZahlungHolder(@NonNull ZahlungHolder holder, @NonNull Rechnung rechnung) {
@@ -144,6 +154,28 @@ public class RechnungAdapter extends FirestoreRecyclerAdapter<Rechnung, Recycler
                     return true;
                 }
             });
+        }
+    }
+
+    class MonthSummaryHolder extends RecyclerView.ViewHolder {
+        private TextView month_date;
+        private TextView month_summary;
+
+        public MonthSummaryHolder(View itemView) {
+            super(itemView);
+            month_date = itemView.findViewById(R.id.month_date);
+            month_summary = itemView.findViewById(R.id.month_summary);
+
+            /*itemView.setOnLongClickListener(new View.OnLongClickListener() {
+                @Override
+                public boolean onLongClick(View v) {
+                    int position = getAdapterPosition();
+                    if (listener != null && position != RecyclerView.NO_POSITION) {
+                        listener.onLongItemClick(getItem(position));
+                    }
+                    return true;
+                }
+            });*/
         }
     }
 

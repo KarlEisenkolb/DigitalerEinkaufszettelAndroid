@@ -70,8 +70,7 @@ public class NewEinkaufFinishedDialog extends DialogFragment {
         // Use the Builder class for convenient dialog construction
         nutzerUndKauefer            = getArguments().getString(Rechnung.KAUEFER); // Für Hinzufügen
 
-        FirebaseFirestore firebaseFirestore = FirebaseFirestore.getInstance();
-        collectionEinkaufszettelBillReference = firebaseFirestore.collection(FIRESTORE_EINKAUFSZETTEL_BILL_COLLECTION); // Für Hinzufügen/Updaten/Löschen
+        collectionEinkaufszettelBillReference = FirebaseFirestore.getInstance().collection(FIRESTORE_EINKAUFSZETTEL_BILL_COLLECTION); // Für Hinzufügen/Updaten/Löschen
 
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
 

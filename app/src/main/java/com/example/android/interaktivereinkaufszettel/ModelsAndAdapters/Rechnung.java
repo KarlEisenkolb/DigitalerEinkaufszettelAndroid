@@ -1,7 +1,10 @@
 package com.example.android.interaktivereinkaufszettel.ModelsAndAdapters;
 
+import androidx.annotation.NonNull;
+
 import com.example.android.interaktivereinkaufszettel.Security.Crypt;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -12,6 +15,7 @@ public class Rechnung {
     public static final long RECHNUNG_GEKAUFT = 0;
     public static final long RECHNUNG_GEPLANT = 1;
     public static final long RECHNUNG_ZAHLUNG = 2;
+    public static final long MONTH_SUMMARY    = 3;
 
     public static final String CONTENT                  = "kd9G2nFs8Js";
     public static final String KAUEFER                  = "o8VsZ37Mdg6";
@@ -19,6 +23,7 @@ public class Rechnung {
     public static final String PREIS                    = "pY2md6KeutM";
     public static final String NUTZERLISTE              = "jEYndDjdkHs";
     public static final String NUTZERZAHLUNGSANTEILE    = "lFsWgdHfgSn";
+    public static final String NUTZERKONTOSTAENDE       = "uEChDFhfDhF";
     public static final String DATUM                    = "uB2ksp24bsP";
     public static final String TYPE                     = "fiJ7Dn2m63d";
     public static final String ID                       = "sM43hs2G49n";
@@ -26,14 +31,19 @@ public class Rechnung {
     private String kd9G2nFs8Js;         // Content
     private String o8VsZ37Mdg6;         // Kauefer
     private String zF2mdPsV3j5;         // Kategorie
-    private String pY2md6KeutM;         // Preis
+    private String pY2md6KeutM;         // Preis oder Summe aller Belege eines Monats für Type Month_Summary
     private List<String> jEYndDjdkHs = new ArrayList<>();   // NutzerListe
     private List<String> lFsWgdHfgSn = new ArrayList<>();   // NutzerZahlungsanteile
+    private List<String> uEChDFhfDhF = new ArrayList<>();   // NutzerKontostaende
     private long   uB2ksp24bsP;         // Datum
-    private String fiJ7Dn2m63d;         // Type
+    private long   fiJ7Dn2m63d;         // Type
     private String sM43hs2G49n;         // Id
 
     public Rechnung(){}
+
+    public static Rechnung addMonthSummary(Double preis, long datum, String id){
+        return new Rechnung("no_content", "no_kauefer", new ArrayList<Nutzer>(), "no_category", preis, datum, MONTH_SUMMARY, id);
+    }
 
     public Rechnung(String content,
                     String kauefer,
@@ -50,12 +60,13 @@ public class Rechnung {
         for (Nutzer nutzer : nutzerList){
             this.jEYndDjdkHs.add(crypt.encryptString(nutzer.gibName()));
             this.lFsWgdHfgSn.add(crypt.encryptDouble(nutzer.gibZahlungsanteil()));
+            this.uEChDFhfDhF.add(crypt.encryptDouble(0));
         }
 
         this.zF2mdPsV3j5 = crypt.encryptString(kategorie);
         this.pY2md6KeutM = crypt.encryptDouble(preis);
         this.uB2ksp24bsP = datum;
-        this.fiJ7Dn2m63d = crypt.encryptLong(type);
+        this.fiJ7Dn2m63d = type;
         this.sM43hs2G49n = crypt.encryptString(id);
     }
 
@@ -65,8 +76,9 @@ public class Rechnung {
     public String getpY2md6KeutM() { return pY2md6KeutM; }
     public List<String> getjEYndDjdkHs() { return jEYndDjdkHs; }
     public List<String> getlFsWgdHfgSn() { return lFsWgdHfgSn; }
+    public List<String> getuEChDFhfDhF() { return uEChDFhfDhF; }
     public long   getuB2ksp24bsP() { return uB2ksp24bsP; }
-    public String getfiJ7Dn2m63d() { return fiJ7Dn2m63d; }
+    public long getfiJ7Dn2m63d() { return fiJ7Dn2m63d; }
     public String getsM43hs2G49n() { return sM43hs2G49n; }
 
     public String gibContent() {
@@ -105,13 +117,20 @@ public class Rechnung {
         return anteilListDecrypt;
     }
 
+    public List<Double> gibAktuelleKontostaende() {
+        Crypt crypt = new Crypt(CRYPT_USE_DEFAULT_KEY);
+        List<Double> nutzerKontoStaende = new ArrayList<>();
+        for (String nutzerKontoCrypt : getuEChDFhfDhF())
+            nutzerKontoStaende.add(crypt.decryptDouble(nutzerKontoCrypt));
+        return nutzerKontoStaende;
+    }
+
     public long gibDatum() {
         return getuB2ksp24bsP();
     }
 
     public long gibType() {
-        Crypt crypt = new Crypt(CRYPT_USE_DEFAULT_KEY);
-        return crypt.decryptLong(getfiJ7Dn2m63d());
+        return getfiJ7Dn2m63d();
     }
 
     public String gibId() {
@@ -139,17 +158,30 @@ public class Rechnung {
         this.pY2md6KeutM = crypt.encryptDouble(preis);
     }
 
+    public void ersetzeAktuelleKontostaende(List<Double> kontoStaendeList) {
+        Crypt crypt = new Crypt(CRYPT_USE_DEFAULT_KEY);
+        this.uEChDFhfDhF.clear();
+        for (Double nutzerKontoCrypt : kontoStaendeList)
+            this.uEChDFhfDhF.add(crypt.encryptDouble(nutzerKontoCrypt));
+    }
+
     public void setzeDatum(long datum) {
         this.uB2ksp24bsP = datum;
     }
 
     public void setzeType(long type) {
-        Crypt crypt = new Crypt(CRYPT_USE_DEFAULT_KEY);
-        this.fiJ7Dn2m63d = crypt.encryptLong(type);
+        this.fiJ7Dn2m63d = type;
     }
 
     public void setzeId(String id) {
         Crypt crypt = new Crypt(CRYPT_USE_DEFAULT_KEY);
         this.sM43hs2G49n = crypt.encryptString(id);
+    }
+
+    @NonNull
+    @Override
+    public String toString() {
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss");
+        return gibContent()+"|"+gibKauefer()+"|"+"nutzerList"+"|"+gibKategorie()+"|"+gibPreis()+"|"+simpleDateFormat.format(gibDatum())+"|"+gibType()+"|"+gibId();
     }
 }
