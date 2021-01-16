@@ -1,4 +1,4 @@
-package com.example.android.interaktivereinkaufszettel.Geldmanagment;
+package com.example.android.interaktivereinkaufszettel.GeldmanagmentActivity;
 
 import androidx.annotation.Nullable;
 import androidx.fragment.app.FragmentManager;

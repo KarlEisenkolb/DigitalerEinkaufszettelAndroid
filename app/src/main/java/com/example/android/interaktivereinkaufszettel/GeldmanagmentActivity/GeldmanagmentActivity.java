@@ -1,4 +1,4 @@
-package com.example.android.interaktivereinkaufszettel.Geldmanagment;
+package com.example.android.interaktivereinkaufszettel.GeldmanagmentActivity;
 
 import android.content.Context;
 import android.content.Intent;
@@ -19,7 +19,6 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.viewpager.widget.ViewPager;
 import com.example.android.interaktivereinkaufszettel.Dialogs.NewRechnungDialog;
 import com.example.android.interaktivereinkaufszettel.ModelsAndAdapters.Nutzer;
-import com.example.android.interaktivereinkaufszettel.ModelsAndAdapters.Rechnung;
 import com.example.android.interaktivereinkaufszettel.Security.Crypt;
 import com.example.android.interaktivereinkaufszettel.Security.CustomFingerprintSecurityHandling;
 import com.example.android.interaktivereinkaufszettel.ModelsAndAdapters.Category;
@@ -32,7 +31,6 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.tabs.TabLayout;
 import com.google.firebase.firestore.CollectionReference;
-import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
@@ -40,11 +38,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static android.view.Menu.NONE;
-import static com.example.android.interaktivereinkaufszettel.ModelsAndAdapters.Rechnung.RECHNUNG_GEKAUFT;
 import static com.example.android.interaktivereinkaufszettel.Security.Crypt.CRYPT_USE_DEFAULT_KEY;
 import static com.example.android.interaktivereinkaufszettel.ModelsAndAdapters.Category.CATEGORY_GROUP_LIST;
 
-public class Geldmanagment extends AppCompatActivity {
+public class GeldmanagmentActivity extends AppCompatActivity {
 
     final static public int NUMBER_OF_RECHNUNGEN_LOADED_PER_ADAPTER         = 40;
     final static public String FIRESTORE_NUTZER_COLLECTION                  = "cLhew80dDbSjs0bs3m7dM8";
@@ -134,7 +131,7 @@ public class Geldmanagment extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 if (checkInternetConnection(getApplicationContext())){
-                    PopupMenu popup = new PopupMenu(Geldmanagment.this, fabNutzer);
+                    PopupMenu popup = new PopupMenu(GeldmanagmentActivity.this, fabNutzer);
                     int i = 0;
                     for (Nutzer currentNutzer : cgc.getNutzerList()) {
                         popup.getMenu().add(NONE, i, NONE, currentNutzer.gibName());
@@ -247,10 +244,10 @@ public class Geldmanagment extends AppCompatActivity {
             case R.id.print:
                 return true;
             case R.id.nutzerAndLists:
-                new CustomFingerprintSecurityHandling(Geldmanagment.this, new CustomFingerprintSecurityHandling.FingerprintSuccessListener() {
+                new CustomFingerprintSecurityHandling(GeldmanagmentActivity.this, new CustomFingerprintSecurityHandling.FingerprintSuccessListener() {
                     @Override
                     public void onFingerprintSuccess() {
-                        Intent intent = new Intent(Geldmanagment.this,AddEditNutzerAndLists.class);
+                        Intent intent = new Intent(GeldmanagmentActivity.this, AddEditNutzerAndListsActivity.class);
                         startActivity(intent);
                     }
                 });

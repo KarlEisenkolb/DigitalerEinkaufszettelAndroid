@@ -1,16 +1,14 @@
-package com.example.android.interaktivereinkaufszettel.Geldmanagment;
+package com.example.android.interaktivereinkaufszettel.GeldmanagmentActivity;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.TextView;
+
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentTransaction;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-import androidx.recyclerview.widget.SimpleItemAnimator;
 
 import com.example.android.interaktivereinkaufszettel.R;
 import com.example.android.interaktivereinkaufszettel.ModelsAndAdapters.Category;
@@ -25,7 +23,7 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
 import java.util.List;
 
-import static com.example.android.interaktivereinkaufszettel.Geldmanagment.Geldmanagment.NUMBER_OF_RECHNUNGEN_LOADED_PER_ADAPTER;
+import static com.example.android.interaktivereinkaufszettel.GeldmanagmentActivity.GeldmanagmentActivity.NUMBER_OF_RECHNUNGEN_LOADED_PER_ADAPTER;
 
 /**
  * A placeholder fragment containing a simple view.

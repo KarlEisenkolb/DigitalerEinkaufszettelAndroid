@@ -1,4 +1,4 @@
-package com.example.android.interaktivereinkaufszettel.Geldmanagment;
+package com.example.android.interaktivereinkaufszettel.GeldmanagmentActivity;
 
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -30,15 +30,15 @@ import static com.example.android.interaktivereinkaufszettel.Security.Crypt.CRYP
 import static com.example.android.interaktivereinkaufszettel.Security.Crypt.CRYPT_USE_PASSPHRASE;
 import static com.example.android.interaktivereinkaufszettel.ModelsAndAdapters.Category.CATEGORY_GROUP_LIST;
 import static com.example.android.interaktivereinkaufszettel.ModelsAndAdapters.Category.CATEGORY_SOLO_LIST;
-import static com.example.android.interaktivereinkaufszettel.Geldmanagment.Geldmanagment.FIRESTORE_CATEGORY_COLLECTION;
-import static com.example.android.interaktivereinkaufszettel.Geldmanagment.Geldmanagment.SHARED_PREF_NAME;
-import static com.example.android.interaktivereinkaufszettel.Geldmanagment.Geldmanagment.SHARED_PREF_NO_NUTZER;
+import static com.example.android.interaktivereinkaufszettel.GeldmanagmentActivity.GeldmanagmentActivity.FIRESTORE_CATEGORY_COLLECTION;
+import static com.example.android.interaktivereinkaufszettel.GeldmanagmentActivity.GeldmanagmentActivity.SHARED_PREF_NAME;
+import static com.example.android.interaktivereinkaufszettel.GeldmanagmentActivity.GeldmanagmentActivity.SHARED_PREF_NO_NUTZER;
 import static com.example.android.interaktivereinkaufszettel.ModelsAndAdapters.Nutzer.ID;
 import static com.example.android.interaktivereinkaufszettel.ModelsAndAdapters.Nutzer.NAME;
-import static com.example.android.interaktivereinkaufszettel.Geldmanagment.Geldmanagment.FIRESTORE_NUTZER_COLLECTION;
-import static com.example.android.interaktivereinkaufszettel.Geldmanagment.Geldmanagment.SHARED_PREF;
+import static com.example.android.interaktivereinkaufszettel.GeldmanagmentActivity.GeldmanagmentActivity.FIRESTORE_NUTZER_COLLECTION;
+import static com.example.android.interaktivereinkaufszettel.GeldmanagmentActivity.GeldmanagmentActivity.SHARED_PREF;
 
-public class AddEditNutzerAndLists extends AppCompatActivity {
+public class AddEditNutzerAndListsActivity extends AppCompatActivity {
 
     private EditText nutzer_name_EditTextView;
     private EditText nutzer_gehalt_EditTextView;

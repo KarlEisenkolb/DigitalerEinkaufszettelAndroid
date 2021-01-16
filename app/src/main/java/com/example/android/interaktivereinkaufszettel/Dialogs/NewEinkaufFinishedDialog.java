@@ -24,10 +24,10 @@ import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 import static android.content.Context.MODE_PRIVATE;
-import static com.example.android.interaktivereinkaufszettel.Geldmanagment.Geldmanagment.FIRESTORE_EINKAUFSZETTEL_BILL_COLLECTION;
-import static com.example.android.interaktivereinkaufszettel.Geldmanagment.Geldmanagment.FIRESTORE_EINKAUFSZETTEL_CATEGORY_NAME;
-import static com.example.android.interaktivereinkaufszettel.Geldmanagment.Geldmanagment.SHARED_PREF;
-import static com.example.android.interaktivereinkaufszettel.Geldmanagment.Geldmanagment.SHARED_PREF_STANDARD_EINKAUFSNAME;
+import static com.example.android.interaktivereinkaufszettel.GeldmanagmentActivity.GeldmanagmentActivity.FIRESTORE_EINKAUFSZETTEL_BILL_COLLECTION;
+import static com.example.android.interaktivereinkaufszettel.GeldmanagmentActivity.GeldmanagmentActivity.FIRESTORE_EINKAUFSZETTEL_CATEGORY_NAME;
+import static com.example.android.interaktivereinkaufszettel.GeldmanagmentActivity.GeldmanagmentActivity.SHARED_PREF;
+import static com.example.android.interaktivereinkaufszettel.GeldmanagmentActivity.GeldmanagmentActivity.SHARED_PREF_STANDARD_EINKAUFSNAME;
 import static com.example.android.interaktivereinkaufszettel.ModelsAndAdapters.Rechnung.RECHNUNG_GEKAUFT;
 
 public class NewEinkaufFinishedDialog extends DialogFragment {

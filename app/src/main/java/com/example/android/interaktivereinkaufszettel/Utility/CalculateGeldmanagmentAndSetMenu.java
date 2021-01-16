@@ -9,7 +9,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import androidx.annotation.NonNull;
-import com.example.android.interaktivereinkaufszettel.Geldmanagment.PlaceholderFragment;
+import com.example.android.interaktivereinkaufszettel.GeldmanagmentActivity.PlaceholderFragment;
 import com.example.android.interaktivereinkaufszettel.ModelsAndAdapters.Category;
 import com.example.android.interaktivereinkaufszettel.ModelsAndAdapters.Rechnung;
 import com.example.android.interaktivereinkaufszettel.R;
@@ -29,7 +29,7 @@ import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 
-import static com.example.android.interaktivereinkaufszettel.Geldmanagment.Geldmanagment.NUMBER_OF_RECHNUNGEN_LOADED_PER_ADAPTER;
+import static com.example.android.interaktivereinkaufszettel.GeldmanagmentActivity.GeldmanagmentActivity.NUMBER_OF_RECHNUNGEN_LOADED_PER_ADAPTER;
 
 public class CalculateGeldmanagmentAndSetMenu {
 

@@ -13,11 +13,11 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity
-            android:name=".Geldmanagment.AddEditNutzerAndLists"
+            android:name=".GeldmanagmentActivity.AddEditNutzerAndListsActivity"
             android:label="Nutzer und Kategorien"
-            android:parentActivityName=".Geldmanagment.Geldmanagment"/>
+            android:parentActivityName=".GeldmanagmentActivity.GeldmanagmentActivity"/>
         <activity
-            android:name=".Geldmanagment.Geldmanagment"
+            android:name=".GeldmanagmentActivity.GeldmanagmentActivity"
             android:label=""
             android:parentActivityName=".MainActivity"
             android:theme="@style/AppTheme.NoActionBar" />
