@@ -70,7 +70,6 @@ public class MainActivity extends AppCompatActivity {
     public final static int RC_SIGN_IN = 0;
 
     private static String which_category = "default";
-    private final String passphrase = "gus321butzel0";
     private CustomFirebaseSecurityHandling securityHandling;
     private AudioManager audio;
     private SoundPool soundPool;
@@ -92,7 +91,7 @@ public class MainActivity extends AppCompatActivity {
         Toolbar toolbar = findViewById(R.id.toolbar_main);
         setSupportActionBar(toolbar);
         addToDatabase();
-        Crypt.initializePassphrase(passphrase);
+        Crypt.initializePassphrase();
         crypt = new Crypt(CRYPT_USE_DEFAULT_KEY);
         securityHandling = new CustomFirebaseSecurityHandling(this);
 
@@ -460,7 +459,7 @@ public class MainActivity extends AppCompatActivity {
                 @Override
                 public void onFingerprintSuccess() {
                     Intent intent = new Intent(MainActivity.this, GeldmanagmentActivity.class);
-                    intent.putExtra(PASSPHRASE, passphrase);
+                    intent.putExtra(PASSPHRASE, Crypt.getPassphrase());
                     startActivity(intent);
                 }
             });

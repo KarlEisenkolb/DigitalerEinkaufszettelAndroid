@@ -76,8 +76,8 @@ public class GeldmanagmentActivity extends AppCompatActivity {
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         if (getIntent().hasExtra(PASSPHRASE)) {
-            String passphrase = getIntent().getExtras().getString(PASSPHRASE);
-            Crypt.initializePassphrase(passphrase);
+            //String passphrase = getIntent().getExtras().getString(PASSPHRASE);
+            Crypt.initializePassphrase();
         }
 
         collectionCategoryReference = FirebaseFirestore.getInstance().collection(FIRESTORE_CATEGORY_COLLECTION);

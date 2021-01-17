@@ -36,10 +36,11 @@ public class Crypt {
 
     final String TAG = "Crypt.Class";
     private final String firebaseStringKey = "oChvIXgFu9BqlaujP/0aT7j8WC/c02KuQxRnNmAwq5k="; // Hier neuen Key einfügen
+    private static final String passphrase = "gus321butzel0";
     private SecretKey firebaseKey;
     private static SecretKey firebasePassphraseKey;
 
-    public static void initializePassphrase(String passphrase) {
+    public static void initializePassphrase() {
         try {
             // byte-Array erzeugen
             byte[] key = passphrase.getBytes("UTF-8");
@@ -139,5 +140,9 @@ public class Crypt {
 
     public double decryptDouble(String number){
         return Double.valueOf(decryptMain(number));
+    }
+
+    public static String getPassphrase() {
+        return passphrase;
     }
 }
