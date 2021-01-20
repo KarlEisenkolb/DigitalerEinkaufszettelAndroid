@@ -1,4 +1,4 @@
-package com.example.android.interaktivereinkaufszettel.ModelsAndAdapters;
+package com.example.android.interaktivereinkaufszettel.models_and_adapters;
 
 import android.content.Context;
 import android.graphics.Color;
@@ -8,8 +8,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
-
-import com.example.android.interaktivereinkaufszettel.ModelsAndAdapters.Note;
 import com.example.android.interaktivereinkaufszettel.R;
 import com.firebase.ui.firestore.FirestoreRecyclerAdapter;
 import com.firebase.ui.firestore.FirestoreRecyclerOptions;
@@ -19,6 +17,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 public class NoteAdapter extends FirestoreRecyclerAdapter<Note, RecyclerView.ViewHolder> {
 
+    private final static String TAG = "FirestoreRecyclerAdapter";
     private OnItemClickListener listenerShort;
     private OnLongItemClickListener listenerLong;
     private final LayoutInflater inflater;
@@ -48,15 +47,15 @@ public class NoteAdapter extends FirestoreRecyclerAdapter<Note, RecyclerView.Vie
             if (note.gibNoteColor() == Note.NOTE_COLOR_GREEN) {
                 ((NoteHolder) holder).itemViewId.setBackgroundColor(Color.parseColor("#388E3C"));
                 ((NoteHolder) holder).textViewContent.setTextColor(Color.BLACK);
-                Log.d("onBind ", "Green");
+                Log.d(TAG, "Green");
             } else if (note.gibNoteColor() == Note.NOTE_NO_COLOR) {
                 ((NoteHolder) holder).itemViewId.setBackgroundColor(Color.parseColor("#FFFFFF"));//#E0E0E0
                 ((NoteHolder) holder).textViewContent.setTextColor(Color.BLACK);
-                Log.d("onBind ", "Gray");
+                Log.d(TAG, "Gray");
             } else {
                 ((NoteHolder) holder).itemViewId.setBackgroundColor(Color.parseColor("#FF8F00"));
                 ((NoteHolder) holder).textViewContent.setTextColor(Color.BLACK);
-                Log.d("onBind ", "Yellow");
+                Log.d(TAG, "Yellow");
             }
         } else {
             ((CategoryHolder) holder).textViewContent.setText(note.gibContent());
@@ -64,15 +63,15 @@ public class NoteAdapter extends FirestoreRecyclerAdapter<Note, RecyclerView.Vie
             if (note.gibNoteColor() == Note.NOTE_COLOR_GREEN) {
                 ((CategoryHolder) holder).itemViewId.setBackgroundColor(Color.parseColor("#388E3C"));
                 ((CategoryHolder) holder).textViewContent.setTextColor(Color.BLACK);
-                Log.d("onBind ", "Green");
+                Log.d(TAG, "Green");
             } else if (note.gibNoteColor() == Note.NOTE_NO_COLOR) {
                 ((CategoryHolder) holder).itemViewId.setBackgroundColor(Color.parseColor("#757575")); //#E0E0E0
                 ((CategoryHolder) holder).textViewContent.setTextColor(Color.WHITE);
-                Log.d("onBind ", "Gray");
+                Log.d(TAG, "Gray");
             } else {
                 ((CategoryHolder) holder).itemViewId.setBackgroundColor(Color.parseColor("#FF8F00"));
                 ((CategoryHolder) holder).textViewContent.setTextColor(Color.BLACK);
-                Log.d("onBind ", "Yellow");
+                Log.d(TAG, "Yellow");
 
             }
         }

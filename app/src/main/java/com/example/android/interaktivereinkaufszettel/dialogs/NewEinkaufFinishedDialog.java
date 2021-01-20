@@ -1,4 +1,4 @@
-package com.example.android.interaktivereinkaufszettel.Dialogs;
+package com.example.android.interaktivereinkaufszettel.dialogs;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -15,8 +15,8 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.DialogFragment;
 
-import com.example.android.interaktivereinkaufszettel.ModelsAndAdapters.Rechnung;
-import com.example.android.interaktivereinkaufszettel.Utility.CustomGlobalContext;
+import com.example.android.interaktivereinkaufszettel.models_and_adapters.Rechnung;
+import com.example.android.interaktivereinkaufszettel.utility.CustomGlobalContext;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.firestore.CollectionReference;
@@ -24,11 +24,11 @@ import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 import static android.content.Context.MODE_PRIVATE;
-import static com.example.android.interaktivereinkaufszettel.GeldmanagmentActivity.GeldmanagmentActivity.FIRESTORE_EINKAUFSZETTEL_BILL_COLLECTION;
-import static com.example.android.interaktivereinkaufszettel.GeldmanagmentActivity.GeldmanagmentActivity.FIRESTORE_EINKAUFSZETTEL_CATEGORY_NAME;
-import static com.example.android.interaktivereinkaufszettel.GeldmanagmentActivity.GeldmanagmentActivity.SHARED_PREF;
-import static com.example.android.interaktivereinkaufszettel.GeldmanagmentActivity.GeldmanagmentActivity.SHARED_PREF_STANDARD_EINKAUFSNAME;
-import static com.example.android.interaktivereinkaufszettel.ModelsAndAdapters.Rechnung.RECHNUNG_GEKAUFT;
+import static com.example.android.interaktivereinkaufszettel.geldmanagment_activity.GeldmanagmentActivity.FIRESTORE_EINKAUFSZETTEL_BILL_COLLECTION;
+import static com.example.android.interaktivereinkaufszettel.geldmanagment_activity.GeldmanagmentActivity.FIRESTORE_EINKAUFSZETTEL_CATEGORY_NAME;
+import static com.example.android.interaktivereinkaufszettel.geldmanagment_activity.GeldmanagmentActivity.SHARED_PREF;
+import static com.example.android.interaktivereinkaufszettel.geldmanagment_activity.GeldmanagmentActivity.SHARED_PREF_STANDARD_EINKAUFSNAME;
+import static com.example.android.interaktivereinkaufszettel.models_and_adapters.Rechnung.RECHNUNG_GEKAUFT;
 
 public class NewEinkaufFinishedDialog extends DialogFragment {
 

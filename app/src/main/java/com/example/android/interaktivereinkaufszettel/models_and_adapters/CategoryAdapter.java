@@ -1,4 +1,4 @@
-package com.example.android.interaktivereinkaufszettel.ModelsAndAdapters;
+package com.example.android.interaktivereinkaufszettel.models_and_adapters;
 
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -15,7 +15,7 @@ import com.firebase.ui.firestore.FirestoreRecyclerOptions;
 
 public class CategoryAdapter extends FirestoreRecyclerAdapter<Category, RecyclerView.ViewHolder> {
     private CategoryAdapter.OnItemClickListener listener;
-    private final String TAG = "CategoryAdapterDebug";
+    private final String TAG = "CategoryAdapter";
     public CategoryAdapter(@NonNull FirestoreRecyclerOptions<Category> options) { super(options);
         Log.d(TAG, "CategoryAdapter: ");}
 

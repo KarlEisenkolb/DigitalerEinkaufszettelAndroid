@@ -1,9 +1,9 @@
-package com.example.android.interaktivereinkaufszettel.GeldmanagmentActivity;
+package com.example.android.interaktivereinkaufszettel.geldmanagment_activity;
 
 import androidx.annotation.Nullable;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentStatePagerAdapter;
-import com.example.android.interaktivereinkaufszettel.ModelsAndAdapters.Category;
+import com.example.android.interaktivereinkaufszettel.models_and_adapters.Category;
 import java.util.ArrayList;
 import java.util.List;
 

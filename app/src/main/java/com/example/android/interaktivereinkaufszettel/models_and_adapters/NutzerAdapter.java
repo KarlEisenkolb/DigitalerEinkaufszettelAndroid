@@ -1,6 +1,5 @@
-package com.example.android.interaktivereinkaufszettel.ModelsAndAdapters;
+package com.example.android.interaktivereinkaufszettel.models_and_adapters;
 
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,7 +14,7 @@ import com.firebase.ui.firestore.FirestoreRecyclerOptions;
 
 public class NutzerAdapter extends FirestoreRecyclerAdapter<Nutzer, RecyclerView.ViewHolder> {
     private NutzerAdapter.OnItemClickListener listener;
-    private final String TAG = "NutzerAdapterDebug";
+    private final String TAG = "NutzerAdapter";
     public NutzerAdapter(@NonNull FirestoreRecyclerOptions<Nutzer> options) {
         super(options);
     }
@@ -25,7 +24,6 @@ public class NutzerAdapter extends FirestoreRecyclerAdapter<Nutzer, RecyclerView
     public NutzerAdapter.NutzerHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View itemView = LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.nutzer_item, parent, false);
-        Log.d(TAG, "onCreateViewHolder: ");
         return new NutzerAdapter.NutzerHolder(itemView);
     }
 

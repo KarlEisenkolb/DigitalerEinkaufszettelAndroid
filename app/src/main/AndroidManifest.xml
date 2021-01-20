@@ -13,11 +13,11 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity
-            android:name=".GeldmanagmentActivity.AddEditNutzerAndListsActivity"
+            android:name=".geldmanagment_activity.AddEditNutzerAndListsActivity"
             android:label="Nutzer und Kategorien"
-            android:parentActivityName=".GeldmanagmentActivity.GeldmanagmentActivity"/>
+            android:parentActivityName=".geldmanagment_activity.GeldmanagmentActivity"/>
         <activity
-            android:name=".GeldmanagmentActivity.GeldmanagmentActivity"
+            android:name=".geldmanagment_activity.GeldmanagmentActivity"
             android:label=""
             android:parentActivityName=".MainActivity"
             android:theme="@style/AppTheme.NoActionBar" />
@@ -34,7 +34,7 @@
         </activity>
 
         <service
-            android:name=".Utility.CustomFirebaseInstanceIdService"
+            android:name=".utility.CustomFirebaseInstanceIdService"
             android:exported="false">
             <intent-filter>
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />

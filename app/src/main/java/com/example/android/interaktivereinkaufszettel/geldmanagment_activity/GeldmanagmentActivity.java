@@ -1,4 +1,4 @@
-package com.example.android.interaktivereinkaufszettel.GeldmanagmentActivity;
+package com.example.android.interaktivereinkaufszettel.geldmanagment_activity;
 
 import android.content.Context;
 import android.content.Intent;
@@ -17,14 +17,14 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.PopupMenu;
 import androidx.appcompat.widget.Toolbar;
 import androidx.viewpager.widget.ViewPager;
-import com.example.android.interaktivereinkaufszettel.Dialogs.NewRechnungDialog;
-import com.example.android.interaktivereinkaufszettel.ModelsAndAdapters.Nutzer;
-import com.example.android.interaktivereinkaufszettel.Security.Crypt;
-import com.example.android.interaktivereinkaufszettel.Security.CustomFingerprintSecurityHandling;
-import com.example.android.interaktivereinkaufszettel.ModelsAndAdapters.Category;
+import com.example.android.interaktivereinkaufszettel.dialogs.NewRechnungDialog;
+import com.example.android.interaktivereinkaufszettel.models_and_adapters.Nutzer;
+import com.example.android.interaktivereinkaufszettel.security.Crypt;
+import com.example.android.interaktivereinkaufszettel.security.CustomFingerprintSecurityHandling;
+import com.example.android.interaktivereinkaufszettel.models_and_adapters.Category;
 import com.example.android.interaktivereinkaufszettel.R;
-import com.example.android.interaktivereinkaufszettel.Utility.CalculateGeldmanagmentAndSetMenu;
-import com.example.android.interaktivereinkaufszettel.Utility.CustomGlobalContext;
+import com.example.android.interaktivereinkaufszettel.utility.CalculateGeldmanagmentAndSetMenu;
+import com.example.android.interaktivereinkaufszettel.utility.CustomGlobalContext;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
@@ -38,8 +38,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static android.view.Menu.NONE;
-import static com.example.android.interaktivereinkaufszettel.Security.Crypt.CRYPT_USE_DEFAULT_KEY;
-import static com.example.android.interaktivereinkaufszettel.ModelsAndAdapters.Category.CATEGORY_GROUP_LIST;
+import static com.example.android.interaktivereinkaufszettel.security.Crypt.CRYPT_USE_DEFAULT_KEY;
+import static com.example.android.interaktivereinkaufszettel.models_and_adapters.Category.CATEGORY_GROUP_LIST;
 
 public class GeldmanagmentActivity extends AppCompatActivity {
 
@@ -49,6 +49,7 @@ public class GeldmanagmentActivity extends AppCompatActivity {
     final static public String FIRESTORE_EINKAUFSZETTEL_BILL_COLLECTION     = "p0WhvEhpE93RGct0peCj";
     final static public String FIRESTORE_EINKAUFSZETTEL_CATEGORY_NAME       = "Haushalt";
 
+    private static final String TAG = "GeldmanagmentActivity";
     public static final String SHARED_PREF = "shared_pref";
     public static final String SHARED_PREF_NAME = "name";
     public static final String SHARED_PREF_STANDARD_EINKAUFSNAME = "Einkauf";
@@ -195,7 +196,7 @@ public class GeldmanagmentActivity extends AppCompatActivity {
                             @Override
                             public void onPageSelected(int position) {
                                 new CalculateGeldmanagmentAndSetMenu(currentNutzer, menu, sectionsPagerAdapter.getItem(position).getCategory(), sectionsPagerAdapter.getItem(position));
-                                Log.d("PageChangerLogging", "onPageSelected: " + position);
+                                Log.d(TAG, "onPageSelected: " + position);
                             }
 
                             @Override

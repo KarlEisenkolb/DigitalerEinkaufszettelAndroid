@@ -1,4 +1,4 @@
-package com.example.android.interaktivereinkaufszettel.Utility;
+package com.example.android.interaktivereinkaufszettel.utility;
 
 import android.content.Context;
 import android.content.Intent;
@@ -13,8 +13,8 @@ import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.example.android.interaktivereinkaufszettel.ModelsAndAdapters.Note;
-import com.example.android.interaktivereinkaufszettel.Security.Crypt;
+import com.example.android.interaktivereinkaufszettel.models_and_adapters.Note;
+import com.example.android.interaktivereinkaufszettel.security.Crypt;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -22,11 +22,12 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import java.util.ArrayList;
 import java.util.Locale;
 
-import static com.example.android.interaktivereinkaufszettel.Security.Crypt.CRYPT_USE_DEFAULT_KEY;
+import static com.example.android.interaktivereinkaufszettel.security.Crypt.CRYPT_USE_DEFAULT_KEY;
 import static com.example.android.interaktivereinkaufszettel.MainActivity.FIRESTORE_EINKAUFSZETTEL_COLLECTION;
 
 public class CustomSpeechRecognition {
 
+    private static final String TAG = "CustomSpeechRecognition";
     private FirebaseFirestore firebaseFirestore = FirebaseFirestore.getInstance();
     private CollectionReference collectionReference;
     private SpeechRecognizer mSpeechRecognizer;
@@ -90,7 +91,7 @@ public class CustomSpeechRecognition {
 
                 long pos = System.currentTimeMillis();
 
-                Log.d("onResults", "test: " + pos);
+                Log.d(TAG, "test: " + pos);
                 //displaying the first match
                 if (matches != null) {
                     DocumentReference docRef = collectionReference.document();

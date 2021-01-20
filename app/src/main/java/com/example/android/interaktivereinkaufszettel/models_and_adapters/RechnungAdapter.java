@@ -1,4 +1,4 @@
-package com.example.android.interaktivereinkaufszettel.ModelsAndAdapters;
+package com.example.android.interaktivereinkaufszettel.models_and_adapters;
 
 import android.graphics.Color;
 import android.text.SpannableString;
@@ -13,8 +13,8 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.android.interaktivereinkaufszettel.R;
-import com.example.android.interaktivereinkaufszettel.Utility.CalculateGeldmanagmentAndSetMenu;
-import com.example.android.interaktivereinkaufszettel.Utility.CustomGlobalContext;
+import com.example.android.interaktivereinkaufszettel.utility.CalculateGeldmanagmentAndSetMenu;
+import com.example.android.interaktivereinkaufszettel.utility.CustomGlobalContext;
 import com.firebase.ui.firestore.FirestoreRecyclerAdapter;
 import com.firebase.ui.firestore.FirestoreRecyclerOptions;
 

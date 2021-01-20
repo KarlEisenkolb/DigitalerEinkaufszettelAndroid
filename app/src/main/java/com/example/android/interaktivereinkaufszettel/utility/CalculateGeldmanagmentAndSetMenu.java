@@ -1,4 +1,4 @@
-package com.example.android.interaktivereinkaufszettel.Utility;
+package com.example.android.interaktivereinkaufszettel.utility;
 
 import android.graphics.Color;
 import android.os.Handler;
@@ -9,11 +9,11 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import androidx.annotation.NonNull;
-import com.example.android.interaktivereinkaufszettel.GeldmanagmentActivity.PlaceholderFragment;
-import com.example.android.interaktivereinkaufszettel.ModelsAndAdapters.Category;
-import com.example.android.interaktivereinkaufszettel.ModelsAndAdapters.Rechnung;
+import com.example.android.interaktivereinkaufszettel.geldmanagment_activity.PlaceholderFragment;
+import com.example.android.interaktivereinkaufszettel.models_and_adapters.Category;
+import com.example.android.interaktivereinkaufszettel.models_and_adapters.Rechnung;
 import com.example.android.interaktivereinkaufszettel.R;
-import com.example.android.interaktivereinkaufszettel.Security.Crypt;
+import com.example.android.interaktivereinkaufszettel.security.Crypt;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.firestore.CollectionReference;
@@ -29,10 +29,11 @@ import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 
-import static com.example.android.interaktivereinkaufszettel.GeldmanagmentActivity.GeldmanagmentActivity.NUMBER_OF_RECHNUNGEN_LOADED_PER_ADAPTER;
+import static com.example.android.interaktivereinkaufszettel.geldmanagment_activity.GeldmanagmentActivity.NUMBER_OF_RECHNUNGEN_LOADED_PER_ADAPTER;
 
 public class CalculateGeldmanagmentAndSetMenu {
 
+    private final static String TAG = "CalculateGeldmanagmentAndSetMenu";
     private CollectionReference collectionIndividualBillReference;
     private String currentNutzerString;
     private Menu menu;
@@ -95,7 +96,7 @@ public class CalculateGeldmanagmentAndSetMenu {
                             for (QueryDocumentSnapshot doc : task.getResult()) {
                                 docRechnung = doc.toObject(Rechnung.class);
                                 docRechnungType = docRechnung.gibType();
-                                Log.d("CalculationLogger", docRechnung.toString());
+                                Log.d(TAG, docRechnung.toString());
 
                                 docDatum = ZonedDateTime.ofInstant(Instant.ofEpochMilli(docRechnung.gibDatum()), ZoneId.systemDefault());
                                 if (notTriggeredOnce){

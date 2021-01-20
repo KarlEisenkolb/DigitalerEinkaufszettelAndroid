@@ -1,4 +1,4 @@
-package com.example.android.interaktivereinkaufszettel.Security;
+package com.example.android.interaktivereinkaufszettel.security;
 
 import android.Manifest;
 import android.app.Activity;

@@ -1,11 +1,11 @@
-package com.example.android.interaktivereinkaufszettel.Utility;
+package com.example.android.interaktivereinkaufszettel.utility;
 
 import android.view.Menu;
 import android.view.MenuItem;
 
 import androidx.annotation.NonNull;
 
-import com.example.android.interaktivereinkaufszettel.ModelsAndAdapters.Nutzer;
+import com.example.android.interaktivereinkaufszettel.models_and_adapters.Nutzer;
 import com.example.android.interaktivereinkaufszettel.R;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
@@ -16,8 +16,8 @@ import com.google.firebase.firestore.QuerySnapshot;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.example.android.interaktivereinkaufszettel.GeldmanagmentActivity.GeldmanagmentActivity.FIRESTORE_NUTZER_COLLECTION;
-import static com.example.android.interaktivereinkaufszettel.GeldmanagmentActivity.GeldmanagmentActivity.SHARED_PREF_NO_NUTZER;
+import static com.example.android.interaktivereinkaufszettel.geldmanagment_activity.GeldmanagmentActivity.FIRESTORE_NUTZER_COLLECTION;
+import static com.example.android.interaktivereinkaufszettel.geldmanagment_activity.GeldmanagmentActivity.SHARED_PREF_NO_NUTZER;
 
 public class CustomGlobalContext {
 

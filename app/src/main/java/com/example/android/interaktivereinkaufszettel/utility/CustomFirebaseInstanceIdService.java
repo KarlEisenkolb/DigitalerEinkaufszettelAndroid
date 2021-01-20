@@ -1,4 +1,4 @@
-package com.example.android.interaktivereinkaufszettel.Utility;
+package com.example.android.interaktivereinkaufszettel.utility;
 
 import android.util.Log;
 
@@ -7,7 +7,7 @@ import com.google.firebase.messaging.RemoteMessage;
 
 public class CustomFirebaseInstanceIdService extends FirebaseMessagingService {
 
-    final public static String TAG = "FirebaseMessaging";
+    final private static String TAG = "CustomFirebaseInstanceIdService";
 
     /**
      * Called if InstanceID token is updated. This may occur if the security of

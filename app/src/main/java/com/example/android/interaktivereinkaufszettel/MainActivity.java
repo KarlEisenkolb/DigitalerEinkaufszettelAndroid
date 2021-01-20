@@ -20,16 +20,16 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-import com.example.android.interaktivereinkaufszettel.Dialogs.NewEinkaufFinishedDialog;
-import com.example.android.interaktivereinkaufszettel.GeldmanagmentActivity.GeldmanagmentActivity;
-import com.example.android.interaktivereinkaufszettel.ModelsAndAdapters.Note;
-import com.example.android.interaktivereinkaufszettel.ModelsAndAdapters.NoteAdapter;
-import com.example.android.interaktivereinkaufszettel.ModelsAndAdapters.Nutzer;
-import com.example.android.interaktivereinkaufszettel.Security.Crypt;
-import com.example.android.interaktivereinkaufszettel.Security.CustomFingerprintSecurityHandling;
-import com.example.android.interaktivereinkaufszettel.Security.CustomFirebaseSecurityHandling;
-import com.example.android.interaktivereinkaufszettel.Utility.CustomGlobalContext;
-import com.example.android.interaktivereinkaufszettel.Utility.CustomSpeechRecognition;
+import com.example.android.interaktivereinkaufszettel.dialogs.NewEinkaufFinishedDialog;
+import com.example.android.interaktivereinkaufszettel.geldmanagment_activity.GeldmanagmentActivity;
+import com.example.android.interaktivereinkaufszettel.models_and_adapters.Note;
+import com.example.android.interaktivereinkaufszettel.models_and_adapters.NoteAdapter;
+import com.example.android.interaktivereinkaufszettel.models_and_adapters.Nutzer;
+import com.example.android.interaktivereinkaufszettel.security.Crypt;
+import com.example.android.interaktivereinkaufszettel.security.CustomFingerprintSecurityHandling;
+import com.example.android.interaktivereinkaufszettel.security.CustomFirebaseSecurityHandling;
+import com.example.android.interaktivereinkaufszettel.utility.CustomGlobalContext;
+import com.example.android.interaktivereinkaufszettel.utility.CustomSpeechRecognition;
 import com.firebase.ui.auth.IdpResponse;
 import com.firebase.ui.firestore.FirestoreRecyclerOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
@@ -54,14 +54,14 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.example.android.interaktivereinkaufszettel.GeldmanagmentActivity.GeldmanagmentActivity.FIRESTORE_NUTZER_COLLECTION;
-import static com.example.android.interaktivereinkaufszettel.Security.Crypt.CRYPT_USE_DEFAULT_KEY;
-import static com.example.android.interaktivereinkaufszettel.Security.CustomFingerprintSecurityHandling.PASSPHRASE;
-import static com.example.android.interaktivereinkaufszettel.ModelsAndAdapters.Note.ADAPTER_POS;
-import static com.example.android.interaktivereinkaufszettel.GeldmanagmentActivity.GeldmanagmentActivity.FIRESTORE_EINKAUFSZETTEL_BILL_COLLECTION;
-import static com.example.android.interaktivereinkaufszettel.GeldmanagmentActivity.GeldmanagmentActivity.SHARED_PREF;
-import static com.example.android.interaktivereinkaufszettel.GeldmanagmentActivity.GeldmanagmentActivity.SHARED_PREF_NAME;
-import static com.example.android.interaktivereinkaufszettel.GeldmanagmentActivity.GeldmanagmentActivity.SHARED_PREF_NO_NUTZER;
+import static com.example.android.interaktivereinkaufszettel.geldmanagment_activity.GeldmanagmentActivity.FIRESTORE_NUTZER_COLLECTION;
+import static com.example.android.interaktivereinkaufszettel.security.Crypt.CRYPT_USE_DEFAULT_KEY;
+import static com.example.android.interaktivereinkaufszettel.security.CustomFingerprintSecurityHandling.PASSPHRASE;
+import static com.example.android.interaktivereinkaufszettel.models_and_adapters.Note.ADAPTER_POS;
+import static com.example.android.interaktivereinkaufszettel.geldmanagment_activity.GeldmanagmentActivity.FIRESTORE_EINKAUFSZETTEL_BILL_COLLECTION;
+import static com.example.android.interaktivereinkaufszettel.geldmanagment_activity.GeldmanagmentActivity.SHARED_PREF;
+import static com.example.android.interaktivereinkaufszettel.geldmanagment_activity.GeldmanagmentActivity.SHARED_PREF_NAME;
+import static com.example.android.interaktivereinkaufszettel.geldmanagment_activity.GeldmanagmentActivity.SHARED_PREF_NO_NUTZER;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -69,6 +69,7 @@ public class MainActivity extends AppCompatActivity {
     public final static String FIRESTORE_SAVE_EINKAUFSZETTEL_COLLECTION    = "xW5LGz1vR9D67rIwH9yROQ";
     public final static int RC_SIGN_IN = 0;
 
+    private final static String TAG = "MainActivity";
     private static String which_category = "default";
     private CustomFirebaseSecurityHandling securityHandling;
     private AudioManager audio;
@@ -189,7 +190,7 @@ public class MainActivity extends AppCompatActivity {
 
                 //Einkaufsfortschritt im Menü darstellen
                 if (e != null) {
-                    Log.w("TAG", "Listen failed.", e);
+                    Log.w(TAG, "Listen failed.", e);
                     return;
                 }
 
@@ -383,12 +384,8 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
 
-        //noinspection SimplifiableIfStatement
         if (id == R.id.speichern) {
             Snackbar.make(fab_done, "Speichern", Snackbar.LENGTH_LONG).setAction("BESTÄTIGEN", new View.OnClickListener() {
                 @Override
@@ -570,7 +567,7 @@ public class MainActivity extends AppCompatActivity {
         long period = 1000*60*60*24*10;
         for(int i=1; i<=7; i++){
             long documentTime = currentTime-period*i;
-            Log.d("AddThingsToDatabase", i + "|" + documentTime + "|" + simpleDateFormat.format(documentTime));
+            Log.d(TAG, i + "|" + documentTime + "|" + simpleDateFormat.format(documentTime));
             DocumentReference docRef = einkaufszettelBillReference.document();
             //docRef.set(new Rechnung("test"+i, "Karl", nutzerList, FIRESTORE_EINKAUFSZETTEL_CATEGORY_NAME, i + 0.0, documentTime, RECHNUNG_GEKAUFT, docRef.getId()));
         }

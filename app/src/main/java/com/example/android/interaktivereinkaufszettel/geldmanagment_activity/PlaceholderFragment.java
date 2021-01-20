@@ -1,4 +1,4 @@
-package com.example.android.interaktivereinkaufszettel.GeldmanagmentActivity;
+package com.example.android.interaktivereinkaufszettel.geldmanagment_activity;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -11,19 +11,19 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.android.interaktivereinkaufszettel.R;
-import com.example.android.interaktivereinkaufszettel.ModelsAndAdapters.Category;
-import com.example.android.interaktivereinkaufszettel.Dialogs.NewRechnungDialog;
-import com.example.android.interaktivereinkaufszettel.ModelsAndAdapters.Rechnung;
-import com.example.android.interaktivereinkaufszettel.ModelsAndAdapters.RechnungAdapter;
-import com.example.android.interaktivereinkaufszettel.Utility.CalculateGeldmanagmentAndSetMenu;
-import com.example.android.interaktivereinkaufszettel.Utility.CustomGlobalContext;
+import com.example.android.interaktivereinkaufszettel.models_and_adapters.Category;
+import com.example.android.interaktivereinkaufszettel.dialogs.NewRechnungDialog;
+import com.example.android.interaktivereinkaufszettel.models_and_adapters.Rechnung;
+import com.example.android.interaktivereinkaufszettel.models_and_adapters.RechnungAdapter;
+import com.example.android.interaktivereinkaufszettel.utility.CalculateGeldmanagmentAndSetMenu;
+import com.example.android.interaktivereinkaufszettel.utility.CustomGlobalContext;
 import com.firebase.ui.firestore.FirestoreRecyclerOptions;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
 import java.util.List;
 
-import static com.example.android.interaktivereinkaufszettel.GeldmanagmentActivity.GeldmanagmentActivity.NUMBER_OF_RECHNUNGEN_LOADED_PER_ADAPTER;
+import static com.example.android.interaktivereinkaufszettel.geldmanagment_activity.GeldmanagmentActivity.NUMBER_OF_RECHNUNGEN_LOADED_PER_ADAPTER;
 
 /**
  * A placeholder fragment containing a simple view.
